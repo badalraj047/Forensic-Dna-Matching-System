@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy-Aware Forensic DNA Matching System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #0ea5e9;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --dark: #0f172a;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: linear-gradient(to bottom, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode {
+            background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+            color: #1e293b;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(6, 182, 212, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+            animation: floatBackground 15s ease-in-out infinite;
+        }
+
+        @keyframes floatBackground {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -20px); }
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 25px;
+            right: 100px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            background: rgba(30, 58, 138, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 1.2em;
+            color: white;
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.light-mode .theme-toggle {
+            background: rgba(248, 250, 252, 0.95);
+            border-color: #e2e8f0;
+            color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-container {
+            position: fixed;
+            top: 25px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .notification-button {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: rgba(30, 58, 138, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 1.2em;
+            color: white;
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+        }
+
+        .notification-button:hover {
+            transform: scale(1.15) rotate(-15deg);
+            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.5);
+            background: rgba(6, 182, 212, 0.9);
+        }
+
+        body.light-mode .notification-button {
+            background: rgba(248, 250, 252, 0.95);
+            border-color: #e2e8f0;
+            color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .notification-button:hover {
+            background: rgba(226, 232, 240, 0.95);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        #notificationBell {
+            transition: all 0.3s ease;
+        }
+
+        #notificationBell.blink {
+            animation: bellBlink 0.6s infinite;
+        }
+
+        @keyframes bellBlink {
+            0%, 100% { 
+                transform: scale(1);
+                filter: drop-shadow(0 0 8px rgba(14, 165, 233, 0.6));
+            }
+            50% { 
+                transform: scale(1.15);
+                filter: drop-shadow(0 0 15px rgba(14, 165, 233, 1));
+            }
+        }
+
+        #notificationCount {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 2px solid rgba(30, 58, 138, 0.8);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        body.light-mode #notificationCount {
+            border-color: #f8fafc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #notificationPanel {
+            position: absolute;
+            top: 70px;
+            right: 0;
+            width: 320px;
+            max-height: 400px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            overflow-y: auto;
+            z-index: 10000;
+            display: none;
+            backdrop-filter: blur(20px);
+            color: #e2e8f0;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body.light-mode #notificationPanel {
+            background: rgba(248, 250, 252, 0.95);
+            border-color: #cbd5e1;
+            color: #1e293b;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        #notificationPanel.show {
+            display: block;
+        }
+
+        #notificationList {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 14px;
+            border-bottom: 1px solid rgba(14, 165, 233, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .notification-item:hover {
+            background: rgba(14, 165, 233, 0.1);
+            transform: translateX(5px);
+        }
+
+        body.light-mode .notification-item {
+            border-bottom-color: #e2e8f0;
+        }
+
+        body.light-mode .notification-item:hover {
+            background: rgba(30, 58, 138, 0.08);
+        }
+
+        .notification-item-time {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        #notificationPanel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #notificationPanel::-webkit-scrollbar-track {
+            background: rgba(14, 165, 233, 0.05);
+        }
+
+        #notificationPanel::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.3);
+            border-radius: 3px;
+        }
+
+        #notificationPanel::-webkit-scrollbar-thumb:hover {
+            background: rgba(14, 165, 233, 0.5);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.15) rotate(15deg);
+            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.5);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            padding: 60px 50px;
+            border-radius: 25px;
+            margin-bottom: 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+            animation: slideDownMagnetic 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body.light-mode .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #e2e8f0;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes slideDownMagnetic {
+            from {
+                opacity: 0;
+                transform: translateY(-80px);
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.3) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 50%, #06b6d4 100%);
+            padding: 12px 24px;
+            border-radius: 30px;
+            margin-bottom: 25px;
+            font-weight: 700;
+            font-size: 0.9em;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.4);
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .header h1 {
+            font-size: 4.5em;
+            font-weight: 800;
+            margin: 25px 0 15px;
+            background: linear-gradient(135deg, #60a5fa, #06b6d4, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 60px rgba(14, 165, 233, 0.3);
+            letter-spacing: -2px;
+            line-height: 1.2;
+            animation: textShimmer 3s ease-in-out infinite;
+        }
+
+        body.light-mode .header h1 {
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes textShimmer {
+            0%, 100% { text-shadow: 0 0 60px rgba(14, 165, 233, 0.3); }
+            50% { text-shadow: 0 0 80px rgba(6, 182, 212, 0.5); }
+        }
+
+        .header p {
+            font-size: 1.4em;
+            color: #cbd5e1;
+            margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        body.light-mode .header p {
+            color: #64748b;
+        }
+
+        .security-badges {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            color: #10b981;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95em;
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.6s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .badge {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .badge:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 70px;
+        }
+
+        .stat-card {
+            background: rgba(30, 58, 138, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 45px 35px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+            animation: fadeInScale 0.8s ease-out;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body.light-mode .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #e2e8f0;
+            box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 25px 50px -10px rgba(14, 165, 233, 0.3),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+            border-color: rgba(14, 165, 233, 0.6);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            position: relative;
+            z-index: 2;
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .stat-number {
+            font-size: 3.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+            font-family: 'Space Mono', monospace;
+        }
+
+        body.light-mode .stat-number {
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            color: #cbd5e1;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+
+        body.light-mode .stat-label {
+            color: #64748b;
+        }
+
+        .section-title {
+            font-size: 3em;
+            font-weight: 800;
+            margin-bottom: 50px;
+            text-align: center;
+            background: linear-gradient(135deg, #60a5fa, #06b6d4, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: slideInDown 0.8s ease-out;
+        }
+
+        body.light-mode .section-title {
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+            margin-bottom: 70px;
+        }
+
+        .action-card {
+            background: rgba(30, 58, 138, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            padding: 50px 40px;
+            border-radius: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 0.8s ease-out;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body.light-mode .action-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: #e2e8f0;
+            box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action-card:nth-child(2) { animation-delay: 0.1s; }
+        .action-card:nth-child(3) { animation-delay: 0.2s; }
+        .action-card:nth-child(4) { animation-delay: 0.3s; }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(16, 185, 129, 0.2));
+            opacity: 0;
+            transform: translateX(-100%);
+            transition: all 0.6s ease;
+            z-index: 0;
+        }
+
+        .action-card:hover::before {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .action-card:hover {
+            transform: translateY(-20px);
+            border-color: rgba(6, 182, 212, 0.6);
+            box-shadow: 0 30px 60px -10px rgba(6, 182, 212, 0.4),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .action-icon {
+            font-size: 4em;
+            margin-bottom: 25px;
+            display: inline-block;
+            animation: iconBounce 2s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .action-card:nth-child(2) .action-icon { animation-delay: 0.2s; }
+        .action-card:nth-child(3) .action-icon { animation-delay: 0.4s; }
+        .action-card:nth-child(4) .action-icon { animation-delay: 0.6s; }
+
+        .action-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+            color: #f1f5f9;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .action-card h3 {
+            color: #1e293b;
+        }
+
+        .action-card:hover h3 {
+            color: var(--secondary);
+        }
+
+        .action-card p {
+            color: #cbd5e1;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            font-size: 1.05em;
+            position: relative;
+            z-index: 1;
+        }
+
+        body.light-mode .action-card p {
+            color: #64748b;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 50%, #06b6d4 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1em;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.3);
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        .btn::after {
+            content: '→';
+            margin-left: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 60px rgba(14, 165, 233, 0.5);
+        }
+
+        .btn:hover::after {
+            transform: translateX(5px);
+        }
+
+        .features-section {
+            background: rgba(30, 58, 138, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 60px 50px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.5);
+            animation: slideUpIn 0.8s ease-out;
+        }
+
+        body.light-mode .features-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #e2e8f0;
+            box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes slideUpIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        body.light-mode .feature-item {
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .feature-item:hover {
+            transform: translateX(10px);
+            background: rgba(6, 182, 212, 0.2);
+            border-color: rgba(6, 182, 212, 0.5);
+        }
+
+        .feature-icon {
+            color: var(--success);
+            font-size: 1.5em;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+
+        .feature-text {
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        body.light-mode .feature-text {
+            color: #1e293b;
+        }
+
+        .tagline {
+            font-size: 1.3rem;
+            color: #00d4ff;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-top: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+            animation: glow 2s ease-in-out infinite;
+            opacity: 0.95;
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                opacity: 0.7;
+                text-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+            }
+            50% { 
+                opacity: 1;
+                text-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
+            }
+        }
+
+        body.light-mode .tagline {
+            color: #0ea5e9;
+            text-shadow: 0 0 5px rgba(14, 165, 233, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px 15px; }
+            .header { padding: 40px 25px; }
+            .header h1 { font-size: 2.5em; }
+            .section-title { font-size: 2em; }
+            .stats-grid, .actions-grid { gap: 20px; }
+            .stat-card, .action-card { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body{% if theme == 'light' %} class="light-mode"{% endif %}>
+    
+    <div class="theme-toggle" id="themeToggle">
+        <span id="themeIcon">🌙</span>
+    </div>
+    
+    <div style="position: fixed; top: 25px; left: 20px; z-index: 1000;">
+        <div style="background: rgba(30, 58, 138, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(14, 165, 233, 0.3); padding: 12px 20px; border-radius: 20px; color: white; font-size: 0.9em;">
+            <span id="userDisplay"></span>
+            <a href="/logout" style="margin-left: 15px; color: #ef4444; text-decoration: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.color='#fca5a5'" onmouseout="this.style.color='#ef4444'">Logout</a>
+        </div>
+    </div>
+
+    <div class="notification-container">
+        <div class="notification-button" id="notificationBell">
+            <i class="fas fa-bell"></i>
+            <span id="notificationCount">0</span>
+        </div>
+        <div id="notificationPanel">
+            <div style="padding: 10px; font-weight: 600; border-bottom: 2px solid rgba(14, 165, 233, 0.3);">
+                Notifications
+            </div>
+            <div id="notificationList"></div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="header">
+            <div class="header-content">
+                <div class="logo-badge">
+                    <i class="fas fa-dna"></i> PREMIUM SYSTEM
+                </div>
+                <h1>🧬 Forensic DNA Matching System</h1>
+                <p>Advanced Privacy-Preserving STR Profile Analysis</p>
+                <p class="tagline">🔬 Unlocking Truth Through DNA. 🔬</p>
+                <div class="security-badges">
+                    <div class="badge"><i class="fas fa-lock"></i> End-to-End Encrypted</div>
+                    <div class="badge"><i class="fas fa-shield-alt"></i> Privacy First</div>
+                    <div class="badge"><i class="fas fa-globe"></i> Multi-Region</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-database"></i></div>
+                <div class="stat-number" id="totalProfiles">0</div>
+                <div class="stat-label">DNA Profiles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-lock"></i></div>
+                <div class="stat-number" id="encryptedProfiles">0</div>
+                <div class="stat-label">Encrypted Profiles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-number" id="totalMatches">0</div>
+                <div class="stat-label">Matches Performed</div>
+            </div>
+        </div>
+
+        <div class="section-title">What You Can Do</div>
+
+        <div class="actions-grid">
+            <div class="action-card">
+                <div class="action-icon">➕</div>
+                <h3>Generate Profiles</h3>
+                <p>Create synthetic STR profiles with 20 CODIS loci and region selection</p>
+                <a href="/generate" class="btn">Start Generating</a>
+            </div>
+
+            <div class="action-card">
+                <div class="action-icon">📤</div>
+                <h3>Upload Profile</h3>
+                <p>Import custom DNA STR profiles with automatic encryption</p>
+                <a href="/upload" class="btn">Upload Now</a>
+            </div>
+
+            <div class="action-card">
+                <div class="action-icon">🔍</div>
+                <h3>Match Profiles</h3>
+                <p>Privacy-preserving comparison using advanced algorithms</p>
+                <a href="/match" class="btn">Match Profiles</a>
+            </div>
+
+            <div class="action-card">
+                <div class="action-icon">📊</div>
+                <h3>View Results</h3>
+                <p>Access comprehensive matching results and analytics</p>
+                <a href="/results" class="btn">View Analytics</a>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <h2 class="section-title">Advanced Features</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-text">20 CODIS Core STR Loci</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-text">Homomorphic Encryption</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-text">Tanabe Similarity Score</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-text">Privacy-Preserving</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-text">Multi-Region Support</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-text">Light/Dark Mode</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-text">Real-time Results</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check"></i></div>
+                    <div class="feature-text">Forensic Grade</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DATABASE MANAGEMENT SECTION (NEW - CORRECTED) ===== -->
+        <div style="margin-top: 70px; padding: 60px 50px; background: rgba(220, 38, 38, 0.15); border: 2px solid rgba(220, 38, 38, 0.4); border-radius: 20px; animation: slideUpIn 0.8s ease-out;">
+            <h2 class="section-title" style="margin-bottom: 40px; color: #ff6b6b;">
+                🗄️ DATABASE MANAGEMENT (NEW)
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+                
+                <!-- Database Stats Card -->
+                <div style="background: rgba(30, 58, 138, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(14, 165, 233, 0.3); padding: 35px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2.5em; margin-bottom: 15px;">📊</div>
+                    <h3 style="color: #cbd5e1; margin-bottom: 10px;">Database Status</h3>
+                    <p style="color: #cbd5e1; margin: 8px 0;">
+                        Total Profiles: <strong id="db-profile-count" style="color: #60a5fa;">Loading...</strong>
+                    </p>
+                    <p style="color: #cbd5e1; margin: 8px 0;">
+                        File: <strong style="color: #10b981;">profiles_database.json</strong>
+                    </p>
+                    <p style="color: #cbd5e1; margin: 8px 0;">
+                        Size: <strong id="db-file-size" style="color: #a78bfa;">Loading...</strong>
+                    </p>
+                    <button onclick="refreshDatabaseStats()" style="margin-top: 15px; padding: 10px 20px; background: #4ecdc4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;" onmouseover="this.style.background='#3bb8ad'" onmouseout="this.style.background='#4ecdc4'">
+                        🔄 Refresh Stats
+                    </button>
+                </div>
+                
+                <!-- Crime Scene Matching Card -->
+                <div style="background: rgba(220, 38, 38, 0.2); backdrop-filter: blur(20px); border: 2px solid rgba(220, 38, 38, 0.4); padding: 35px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2.5em; margin-bottom: 15px;">🚨</div>
+                    <h3 style="color: #ff6b6b; margin-bottom: 10px;">CRIME SCENE MATCHING</h3>
+                    <p style="color: #cbd5e1; margin-bottom: 15px; font-size: 0.95em;">
+                        Match crime scene DNA against all profiles in database
+                    </p>
+                    <a href="/crime-scene" style="display: inline-block; padding: 12px 25px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(239, 68, 68, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(239, 68, 68, 0.3)'">
+                        Go to Crime Matching →
+                    </a>
+                </div>
+
+                <!-- Import/Export Card -->
+                <div style="background: rgba(30, 58, 138, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(14, 165, 233, 0.3); padding: 35px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 2.5em; margin-bottom: 15px;">⚙️</div>
+                    <h3 style="color: #cbd5e1; margin-bottom: 10px;">Database Operations</h3>
+                    <p style="color: #cbd5e1; margin-bottom: 15px; font-size: 0.95em;">
+                        Import/Export your database
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button onclick="exportDatabase()" style="padding: 10px 15px; background: #95e1d3; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;" onmouseover="this.style.background='#7dd3c0'" onmouseout="this.style.background='#95e1d3'">
+                            📥 Export
+                        </button>
+                        <button onclick="document.getElementById('import-file').click()" style="padding: 10px 15px; background: #f38181; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;" onmouseover="this.style.background='#e86868'" onmouseout="this.style.background='#f38181'">
+                            📤 Import
+                        </button>
+                    </div>
+                    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importDatabase(event)">
+                </div>
+            </div>
+        </div>
+        <!-- ===== END DATABASE MANAGEMENT SECTION ===== -->
+
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user');
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('userDisplay').textContent = `👤 ${data.user.username}`;
+                }
+            } catch (error) {
+                console.log('Error loading user info:', error);
+            }
+        }
+
+        loadUserInfo();
+
+        if (document.body.classList.contains('light-mode')) {
+            themeIcon.textContent = '☀️';
+        } else {
+            themeIcon.textContent = '🌙';
+        }
+
+        themeToggle.addEventListener('click', function() {
+            fetch('/toggle-theme').then(r => r.json()).then(data => {
+                document.body.classList.toggle('light-mode', data.theme === 'light');
+                themeIcon.textContent = data.theme === 'light' ? '☀️' : '🌙';
+            });
+        });
+
+        setInterval(function() {
+            fetch('/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    animateCounter('totalProfiles', data.total_profiles);
+                    animateCounter('encryptedProfiles', data.encrypted_profiles);
+                    animateCounter('totalMatches', data.total_matches);
+                });
+        }, 3000);
+
+        function animateCounter(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseInt(element.textContent);
+            const difference = targetValue - currentValue;
+            const steps = 20;
+            const increment = difference / steps;
+            let current = currentValue;
+
+            for (let i = 1; i <= steps; i++) {
+                setTimeout(() => {
+                    current += increment;
+                    element.textContent = Math.round(current);
+                }, (i * 50));
+            }
+        }
+    </script>
+
+    <script>
+    // ===== NOTIFICATION BELL CODE =====
+    const notificationBell = document.getElementById('notificationBell');
+    const notificationCount = document.getElementById('notificationCount');
+    const notificationPanel = document.getElementById('notificationPanel');
+    const notificationList = document.getElementById('notificationList');
+
+    let allNotifications = [];
+
+    notificationBell.addEventListener('click', function() {
+        notificationPanel.classList.toggle('show');
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!notificationBell.contains(event.target) && !notificationPanel.contains(event.target)) {
+            notificationPanel.classList.remove('show');
+        }
+    });
+
+    async function updateNotifications() {
+        try {
+            const response = await fetch('/api/notifications');
+            const data = await response.json();
+            
+            if (data.success) {
+                allNotifications = data.notifications;
+                
+                const unreadCount = data.notifications.length;
+                if (unreadCount > 0) {
+                    notificationCount.textContent = unreadCount;
+                    notificationCount.style.display = 'flex';
+                    notificationBell.classList.add('blink');
+                } else {
+                    notificationCount.style.display = 'none';
+                    notificationBell.classList.remove('blink');
+                }
+                
+                notificationList.innerHTML = '';
+                data.notifications.forEach(notif => {
+                    const item = document.createElement('div');
+                    item.className = 'notification-item';
+                    item.innerHTML = `
+                        <strong>${notif.title}</strong>
+                        <p style="margin: 5px 0; color: #666; font-size: 0.9rem;">${notif.message}</p>
+                        <small style="color: #999;">${new Date(notif.timestamp).toLocaleTimeString()}</small>
+                    `;
+                    notificationList.appendChild(item);
+                });
+            }
+        } catch (error) {
+            console.log('Error loading notifications:', error);
+        }
+    }
+
+    updateNotifications();
+    setInterval(updateNotifications, 3000);
+    </script>
+
+    <script>
+    // ===== DATABASE MANAGEMENT FUNCTIONS (NEW - CORRECTED) =====
+
+    async function refreshDatabaseStats() {
+        try {
+            const response = await fetch('/api/database-stats');
+            const data = await response.json();
+            
+            if (data.success) {
+                document.getElementById('db-profile-count').textContent = data.total_profiles;
+                document.getElementById('db-file-size').textContent = (data.database_file_size_kb).toFixed(2) + ' KB';
+            }
+        } catch (error) {
+            console.error('Error refreshing stats:', error);
+            document.getElementById('db-profile-count').textContent = 'Error';
+        }
+    }
+
+    async function exportDatabase() {
+        try {
+            const response = await fetch('/api/export-database');
+            const blob = await response.blob();
+            
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `forensic_database_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            alert('✓ Database exported successfully!');
+        } catch (error) {
+            alert('❌ Error exporting database: ' + error);
+        }
+    }
+
+    async function importDatabase(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch('/api/import-database', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(`✓ Imported ${data.total_profiles} profiles successfully!`);
+                refreshDatabaseStats();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('❌ Error importing: ' + error);
+        }
+    }
+
+    window.addEventListener('load', function() {
+        refreshDatabaseStats();
+        setInterval(refreshDatabaseStats, 10000);
+    });
+
+    // ===== END DATABASE MANAGEMENT FUNCTIONS =====
+    </script>
+
+</body>
+</html>

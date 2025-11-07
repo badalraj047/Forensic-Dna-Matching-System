@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crime Scene DNA Matching - Forensic DNA System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.95em;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .loci-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .locus-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .locus-input label {
+            margin: 0;
+            font-weight: 500;
+            min-width: 80px;
+        }
+
+        .locus-input input {
+            flex: 1;
+            margin: 0;
+            padding: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            padding: 12px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+        }
+
+        .results-header {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .matches-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .match-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .match-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(5px);
+        }
+
+        .match-card.definite {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .match-card.probable {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .match-card.possible {
+            border-left-color: #17a2b8;
+            background: #f0f7ff;
+        }
+
+        .match-rank {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 50%;
+            font-weight: bold;
+            min-width: 35px;
+            text-align: center;
+            margin-right: 15px;
+        }
+
+        .match-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .match-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .match-info-item label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .match-info-item value {
+            color: #333;
+        }
+
+        .score-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .status-definite {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-probable {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-possible {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #f5c6cb;
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #c3e6cb;
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .success.show {
+            display: block;
+        }
+
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚨 CRIME SCENE DNA MATCHING</h1>
+            <p>Match DNA evidence from crime scene against forensic database</p>
+        </div>
+
+        <div class="content">
+            <!-- Error and Success Messages -->
+            <div id="error-message" class="error"></div>
+            <div id="success-message" class="success"></div>
+
+            <!-- INPUT FORM SECTION -->
+            <div class="form-section">
+                <h2>📋 Enter Crime Scene DNA Sample</h2>
+
+                <div class="form-group">
+                    <label for="sample-id">Sample ID (e.g., CRIME_2024_11_01)</label>
+                    <input type="text" id="sample-id" value="CRIME_2024_11_01" placeholder="Auto-generated if empty">
+                </div>
+
+                <div class="form-group">
+                    <label>Enter DNA Markers (20 CODIS Loci)</label>
+                    <div class="loci-grid" id="loci-inputs">
+                        <!-- Will be generated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="json-paste">Or Paste JSON Profile:</label>
+                    <textarea id="json-paste" placeholder='{"markers": {"D3S1358": [14, 16], "D5S818": [11, 12], ...}}'></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="matchCrimeScene()">🔍 MATCH AGAINST DATABASE</button>
+                    <button class="btn-secondary" onclick="loadSampleData()">📝 Load Sample Data</button>
+                </div>
+            </div>
+
+            <!-- LOADING SECTION -->
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Matching crime scene DNA against database...</p>
+                <p id="processing-text">Processing: 0%</p>
+            </div>
+
+            <!-- RESULTS SECTION -->
+            <div id="results-section" class="results-section">
+                <div class="results-header">
+                    <h2>✓ MATCHING COMPLETE</h2>
+                    <p>Crime Sample ID: <strong id="result-sample-id"></strong></p>
+                    <p>Searched Against: <strong id="result-total-profiles"></strong> profiles</p>
+                    <p>Timestamp: <strong id="result-timestamp"></strong></p>
+                </div>
+
+                <div class="results-stats">
+                    <div class="stat-card">
+                        <div class="number" id="definite-count">0</div>
+                        <div class="label">DEFINITE MATCHES</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="probable-count">0</div>
+                        <div class="label">PROBABLE MATCHES</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="possible-count">0</div>
+                        <div class="label">POSSIBLE MATCHES</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn-primary" onclick="downloadResults()">📥 Download Results (PDF)</button>
+                </div>
+
+                <div class="matches-list">
+                    <h3 style="margin-bottom: 20px; color: #333;">🎯 TOP 10 SUSPECT MATCHES</h3>
+                    <div id="matches-container">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>🧬 Privacy-Aware Forensic DNA Matching System | Capstone Project</p>
+            <p>© 2025 Forensic DNA Database</p>
+        </footer>
+    </div>
+
+    <script>
+        const CODIS_LOCI = [
+            'CSF1PO', 'D3S1358', 'D5S818', 'D7S820', 'D8S1179',
+            'D13S317', 'D16S539', 'D18S51', 'D21S11', 'FGA',
+            'TH01', 'TPOX', 'vWA', 'D1S1656', 'D2S441',
+            'D2S1338', 'D10S1248', 'D12S391', 'D19S433', 'D22S1045'
+        ];
+
+        // Generate loci input fields
+        function generateLociInputs() {
+            const container = document.getElementById('loci-inputs');
+            CODIS_LOCI.forEach(locus => {
+                const div = document.createElement('div');
+                div.className = 'locus-input';
+                div.innerHTML = `
+                    <label>${locus}</label>
+                    <input type="text" placeholder="e.g., 14,16" data-locus="${locus}">
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Load sample data for testing
+        function loadSampleData() {
+            const inputs = document.querySelectorAll('.locus-input input');
+            const samples = {
+                'CSF1PO': '10,12', 'D3S1358': '14,16', 'D5S818': '11,12',
+                'D7S820': '8,10', 'D8S1179': '13,15', 'D13S317': '10,12',
+                'D16S539': '11,13', 'D18S51': '15,17', 'D21S11': '29,31',
+                'FGA': '21,23', 'TH01': '6,8', 'TPOX': '8,10',
+                'vWA': '16,18', 'D1S1656': '14,16', 'D2S441': '11,13',
+                'D2S1338': '18,20', 'D10S1248': '12,14', 'D12S391': '19,21',
+                'D19S433': '12,14', 'D22S1045': '11,13'
+            };
+
+            inputs.forEach(input => {
+                const locus = input.dataset.locus;
+                input.value = samples[locus] || '';
+            });
+
+            showMessage('✓ Sample data loaded', 'success');
+        }
+
+        // Parse alleles from input
+        function parseAlleles(input) {
+            return input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+        }
+
+        // Get crime scene DNA from form
+        function getCrimeSampleFromForm() {
+            const markers = {};
+            document.querySelectorAll('.locus-input input').forEach(input => {
+                const locus = input.dataset.locus;
+                const alleles = parseAlleles(input.value);
+                if (alleles.length === 2) {
+                    markers[locus] = alleles;
+                }
+            });
+
+            return {
+                id: document.getElementById('sample-id').value || 'CRIME_' + new Date().getTime(),
+                markers: markers
+            };
+        }
+
+        // Match crime scene DNA
+        async function matchCrimeScene() {
+            try {
+                clearMessages();
+                
+                let crimeSample;
+                const jsonPaste = document.getElementById('json-paste').value.trim();
+                
+                if (jsonPaste) {
+                    crimeSample = JSON.parse(jsonPaste);
+                } else {
+                    crimeSample = getCrimeSampleFromForm();
+                }
+
+                if (!crimeSample.markers || Object.keys(crimeSample.markers).length < 5) {
+                    showMessage('❌ Please enter at least 5 loci with alleles', 'error');
+                    return;
+                }
+
+                // Show loading
+                document.getElementById('loading').classList.add('show');
+                document.getElementById('results-section').classList.remove('show');
+
+                // Send to backend
+                const response = await fetch('/api/crime-scene-match', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(crimeSample)
+                });
+
+                const data = await response.json();
+
+                // Hide loading
+                document.getElementById('loading').classList.remove('show');
+
+                if (data.success) {
+                    displayResults(data, crimeSample);
+                    showMessage('✓ Matching complete!', 'success');
+                } else {
+                    showMessage('❌ ' + data.error, 'error');
+                }
+
+            } catch (error) {
+                document.getElementById('loading').classList.remove('show');
+                showMessage('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // Display results
+        function displayResults(data, crimeSample) {
+            document.getElementById('result-sample-id').textContent = crimeSample.id;
+            document.getElementById('result-total-profiles').textContent = data.total_profiles_searched;
+            document.getElementById('result-timestamp').textContent = new Date().toLocaleString();
+
+            document.getElementById('definite-count').textContent = data.definite_matches;
+            document.getElementById('probable-count').textContent = data.probable_matches;
+            document.getElementById('possible-count').textContent = data.possible_matches || 0;
+
+            const matchesContainer = document.getElementById('matches-container');
+            matchesContainer.innerHTML = '';
+
+            data.top_10_suspects.forEach((match, index) => {
+                const statusClass = match.status === 'DEFINITE MATCH' ? 'definite' :
+                                  match.status === 'PROBABLE MATCH' ? 'probable' : 'possible';
+
+                const statusBadgeClass = match.status === 'DEFINITE MATCH' ? 'status-definite' :
+                                       match.status === 'PROBABLE MATCH' ? 'status-probable' : 'status-possible';
+
+                const card = document.createElement('div');
+                card.className = `match-card ${statusClass}`;
+                card.innerHTML = `
+                    <div style="display: flex; align-items: flex-start;">
+                        <div class="match-rank">${index + 1}</div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div>
+                                    <h3 style="color: #333; margin-bottom: 5px;">${match.suspect_name}</h3>
+                                    <p style="color: #666; font-size: 0.9em;">ID: ${match.suspect_id}</p>
+                                </div>
+                                <span class="status-badge ${statusBadgeClass}">${match.status}</span>
+                            </div>
+
+                            <div class="match-info">
+                                <div class="match-info-item">
+                                    <label>Similarity Score:</label>
+                                    <value><strong>${match.similarity_percentage}</strong></value>
+                                </div>
+                                <div class="match-info-item">
+                                    <label>Confidence:</label>
+                                    <value><strong>${match.confidence}</strong></value>
+                                </div>
+                                <div class="match-info-item">
+                                    <label>Arrest Date:</label>
+                                    <value>${match.arrest_date}</value>
+                                </div>
+                                <div class="match-info-item">
+                                    <label>Region:</label>
+                                    <value>${match.region}</value>
+                                </div>
+                            </div>
+
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: ${match.similarity_score * 100}%;">
+                                    ${Math.round(match.similarity_score * 100)}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                matchesContainer.appendChild(card);
+            });
+
+            document.getElementById('results-section').classList.add('show');
+        }
+
+        // Utility functions
+        function showMessage(msg, type) {
+            const element = document.getElementById(`${type}-message`);
+            element.textContent = msg;
+            element.classList.add('show');
+            setTimeout(() => element.classList.remove('show'), 5000);
+        }
+
+        function clearMessages() {
+            document.getElementById('error-message').classList.remove('show');
+            document.getElementById('success-message').classList.remove('show');
+        }
+
+        function downloadResults() {
+            showMessage('📥 PDF export feature coming soon!', 'success');
+        }
+
+        // Initialize
+        window.addEventListener('load', generateLociInputs);
+    </script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Profiles</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap');
+
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #0ea5e9;
+            --accent: #06b6d4;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: linear-gradient(to bottom, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            padding: 40px 20px;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode {
+            background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+            color: #1e293b;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .theme-toggle {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 1000;
+            background: rgba(30, 58, 138, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 14px 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 1.3em;
+            color: white;
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+        }
+
+        body.light-mode .theme-toggle {
+            background: rgba(248, 250, 252, 0.95);
+            border-color: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.15) rotate(15deg);
+            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.5);
+        }
+
+        .nav {
+            background: rgba(30, 58, 138, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            padding: 16px 24px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        body.light-mode .nav {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #e2e8f0;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            transform: translateX(-5px);
+        }
+
+        .card {
+            background: rgba(30, 58, 138, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            animation: fadeInScale 0.6s ease-out;
+        }
+
+        body.light-mode .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #e2e8f0;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        h1 {
+            font-size: 2.8em;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #60a5fa, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        body.light-mode h1 {
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        body.light-mode .subtitle {
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        label {
+            display: block;
+            color: #f1f5f9;
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        body.light-mode label {
+            color: #1e293b;
+        }
+
+        select {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(14, 165, 233, 0.3);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-family: 'Sora', sans-serif;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        body.light-mode select {
+            background: white;
+            color: #1e293b;
+            border-color: #e2e8f0;
+        }
+
+        select:hover {
+            border-color: rgba(14, 165, 233, 0.6);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 50%, #06b6d4 100%);
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 25px 60px rgba(14, 165, 233, 0.5);
+        }
+
+        .btn:disabled {
+            background: #64748b;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: none;
+            animation: slideDown 0.4s ease-out;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            border-left-color: var(--success);
+            color: #6ee7b7;
+        }
+
+        body.light-mode .alert-success {
+            color: #059669;
+        }
+
+        .info-box {
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        body.light-mode .info-box {
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .info-box strong {
+            color: var(--accent);
+            font-size: 1.05em;
+        }
+
+        .profile-item {
+            background: rgba(14, 165, 233, 0.1);
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 3px solid var(--success);
+            animation: slideInLeft 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .profile-item:hover {
+            background: rgba(14, 165, 233, 0.2);
+            transform: translateX(5px);
+        }
+
+        .profile-item i { color: var(--success); }
+
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body{% if theme == 'light' %} class="light-mode"{% endif %}>
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </div>
+
+    <div class="container">
+        <div class="nav">
+            <a href="/"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="card">
+            <h1><i class="fas fa-flask"></i> Generate Profiles</h1>
+            <p class="subtitle">Create synthetic DNA STR profiles for testing</p>
+
+            <div id="alertBox" class="alert"></div>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i> <strong>20 CODIS Loci:</strong> Each profile generates forensically accurate STR markers with automatic encryption.
+            </div>
+
+            <form id="generateForm">
+                <div class="form-group">
+                    <label><i class="fas fa-globe"></i> Select Region</label>
+                    <select id="region" name="region" required>
+                        <option value="USA">🇺🇸 United States</option>
+                        <option value="UK">🇬🇧 United Kingdom</option>
+                        <option value="Canada">🇨🇦 Canada</option>
+                        <option value="India">🇮🇳 India</option>
+                        <option value="Germany">🇩🇪 Germany</option>
+                        <option value="France">🇫🇷 France</option>
+                        <option value="Japan">🇯🇵 Japan</option>
+                        <option value="Australia">🇦🇺 Australia</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-list"></i> Profiles to Generate</label>
+                    <select id="count" name="count" required>
+                        <option value="1">1 Profile</option>
+                        <option value="5" selected>5 Profiles</option>
+                        <option value="10">10 Profiles</option>
+                        <option value="25">25 Profiles</option>
+                        <option value="50">50 Profiles</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn" id="generateBtn">
+                    <i class="fas fa-play"></i> Generate & Encrypt
+                </button>
+            </form>
+
+            <div id="resultsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+
+        themeToggle.addEventListener('click', function() {
+            fetch('/toggle-theme').then(r => r.json()).then(data => {
+                document.body.classList.toggle('light-mode', data.theme === 'light');
+                themeToggle.innerHTML = data.theme === 'light' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+        });
+
+        document.getElementById('generateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('generateBtn');
+            const alert = document.getElementById('alertBox');
+            const results = document.getElementById('resultsList');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Generating...';
+
+            fetch('/generate', {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert.className = 'alert alert-success';
+                    alert.textContent = '✓ ' + data.message;
+                    alert.style.display = 'block';
+
+                    let html = '<div style="margin-top:30px;"><h3 style="color: var(--secondary); margin-bottom: 15px; font-weight: 700;"><i class="fas fa-database"></i> Generated Profiles:</h3>';
+                    data.profile_ids.forEach((id, i) => {
+                        html += `<div class="profile-item" style="animation-delay: ${i*0.05}s;"><i class="fas fa-check-circle"></i> <strong>${id}</strong></div>`;
+                    });
+                    results.innerHTML = html;
+                } else {
+                    alert.className = 'alert alert-error';
+                    alert.textContent = '✗ Error: ' + data.error;
+                    alert.style.display = 'block';
+                }
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-play"></i> Generate & Encrypt';
+            });
+        });
+    </script>
+</body>
+</html>

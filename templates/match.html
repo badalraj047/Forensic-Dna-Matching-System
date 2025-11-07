@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Profiles</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap');
+
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #0ea5e9;
+            --accent: #06b6d4;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: linear-gradient(to bottom, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            padding: 40px 20px;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode {
+            background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+            color: #1e293b;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        .theme-toggle {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 1000;
+            background: rgba(30, 58, 138, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 14px 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 1.3em;
+            color: white;
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+        }
+
+        body.light-mode .theme-toggle {
+            background: rgba(248, 250, 252, 0.95);
+            border-color: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.15) rotate(15deg);
+            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.5);
+        }
+
+        .nav {
+            background: rgba(30, 58, 138, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            padding: 16px 24px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        body.light-mode .nav {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #e2e8f0;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover { transform: translateX(-5px); }
+
+        .card {
+            background: rgba(30, 58, 138, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            animation: fadeInScale 0.6s ease-out;
+        }
+
+        body.light-mode .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #e2e8f0;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        h1 {
+            font-size: 2.8em;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #60a5fa, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        body.light-mode h1 {
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        body.light-mode .subtitle {
+            color: #64748b;
+        }
+
+        .info-box {
+            background: rgba(6, 182, 212, 0.15);
+            border-left: 4px solid var(--accent);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            animation: slideInDown 0.6s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        label {
+            display: block;
+            color: #f1f5f9;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95em;
+        }
+
+        body.light-mode label {
+            color: #1e293b;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(14, 165, 233, 0.3);
+            border-radius: 10px;
+            color: #e2e8f0;
+            font-family: 'Sora', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode select,
+        body.light-mode input[type="range"] {
+            background: white;
+            color: #1e293b;
+            border-color: #e2e8f0;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+        }
+
+        input[type="range"] {
+            padding: 0;
+            height: 8px;
+            border: none;
+            background: linear-gradient(to right, rgba(14, 165, 233, 0.3), rgba(6, 182, 212, 0.3));
+            border-radius: 5px;
+        }
+
+        .threshold-display {
+            text-align: center;
+            padding: 15px;
+            background: rgba(14, 165, 233, 0.1);
+            border-radius: 10px;
+            margin-top: 12px;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-left: 4px solid var(--success);
+            border-radius: 10px;
+        }
+
+        .checkbox-group input { width: 20px; accent-color: var(--secondary); cursor: pointer; }
+        .checkbox-group label { margin: 0; font-size: 1em; cursor: pointer; text-transform: none; }
+
+        .btn {
+            background: linear-gradient(135deg, #1e3a8a 0%, #0ea5e9 50%, #06b6d4 100%);
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 25px 60px rgba(14, 165, 233, 0.5);
+        }
+
+        .results-container {
+            margin-top: 40px;
+            display: none;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-container h2 {
+            color: var(--secondary);
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-card {
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-left: 4px solid var(--success);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            animation: slideInLeft 0.4s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .result-card:hover {
+            transform: translateX(8px);
+            background: rgba(14, 165, 233, 0.2);
+            border-color: rgba(14, 165, 233, 0.6);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .result-id { font-weight: 700; color: #f1f5f9; font-size: 1.05em; }
+
+        body.light-mode .result-id { color: #1e293b; }
+
+        .result-score {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.95em;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .result-status {
+            padding: 10px;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .badge-match {
+            background: rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body{% if theme == 'light' %} class="light-mode"{% endif %}>
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-moon"></i>
+    </div>
+
+    <div class="container">
+        <div class="nav">
+            <a href="/"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="card">
+            <h1><i class="fas fa-microscope"></i> Match Profiles</h1>
+            <p class="subtitle">Compare DNA profiles with privacy protection</p>
+
+            {% if profiles|length == 0 %}
+            <div class="alert-warning">
+                <i class="fas fa-warning"></i> <strong>No profiles available.</strong> Generate or upload profiles first.
+            </div>
+            <a href="/generate" class="btn" style="text-decoration: none; display: inline-block;">Generate Profiles</a>
+            {% else %}
+
+            <div class="info-box">
+                <i class="fas fa-lock"></i> <strong>Privacy Protected:</strong> All matching occurs on encrypted data. Raw DNA is never exposed.
+            </div>
+
+            <form id="matchForm">
+                <div class="form-group">
+                    <label><i class="fas fa-dna"></i> Query Profile</label>
+                    <select id="query_id" name="query_id" required>
+                        <option>-- Select Profile --</option>
+                        {% for pid in profiles %}
+                        <option value="{{ pid }}">{{ pid }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-sliders-h"></i> Threshold (Lower = More Matches)</label>
+                    <input type="range" id="threshold" name="threshold" min="0.5" max="1.0" step="0.05" value="0.70">
+                    <div class="threshold-display">
+                        Threshold: <span id="thresholdValue">0.70</span> (70%)
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="filter_region" name="filter_region" value="true">
+                        <label for="filter_region"><i class="fas fa-globe"></i> Same Region Only</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group" style="border-left-color: #0ea5e9; background: rgba(14, 165, 233, 0.1); border-color: rgba(14, 165, 233, 0.3);">
+                        <input type="checkbox" id="use_encryption" name="use_encryption" value="true" checked>
+                        <label for="use_encryption"><i class="fas fa-shield-alt"></i> Encrypted Matching</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">
+                    <i class="fas fa-search"></i> Start Matching
+                </button>
+            </form>
+
+            <div class="results-container" id="resultsContainer">
+                <h2><i class="fas fa-chart-bar"></i> Results</h2>
+                <div id="resultsContent"></div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', function() {
+            fetch('/toggle-theme').then(r => r.json()).then(data => {
+                document.body.classList.toggle('light-mode', data.theme === 'light');
+                themeToggle.innerHTML = data.theme === 'light' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+        });
+
+        const slider = document.getElementById('threshold');
+        const display = document.getElementById('thresholdValue');
+        if(slider) slider.addEventListener('input', e => display.textContent = e.target.value);
+
+        const form = document.getElementById('matchForm');
+        if(form) {
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                const btn = e.target.querySelector('.btn');
+                btn.innerHTML = '<span class="spinner"></span>Analyzing...';
+                btn.disabled = true;
+
+                const data = new FormData(form);
+                fetch('/match', { method: 'POST', body: data })
+                    .then(r => r.json())
+                    .then(d => {
+                        const results = document.getElementById('resultsContainer');
+                        const content = document.getElementById('resultsContent');
+                        results.style.display = 'block';
+
+                        if(d.success && d.results.length > 0) {
+                            let html = '<div style="padding:16px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:10px;margin-bottom:20px;border-left:4px solid #10b981;"><i class="fas fa-check-circle"></i> <strong>Found ' + d.matches_found + ' match(es)</strong></div>';
+                            d.results.forEach((r, i) => {
+                                html += `<div class="result-card" style="animation-delay:${i*0.1}s;"><div class="result-header"><div class="result-id">${r.target_id}</div><div class="result-score">${(r.score*100).toFixed(2)}%</div></div><div class="result-status"><span class="badge badge-match"><i class="fas fa-check"></i> ${r.status}</span>${r.encrypted ? ' <span style="color:#10b981;"><i class="fas fa-lock"></i> Encrypted</span>' : ''}</div></div>`;
+                            });
+                            content.innerHTML = html;
+                        } else {
+                            content.innerHTML = '<div style="text-align:center;padding:30px;color:#cbd5e1;"><i class="fas fa-inbox"></i><p style="margin-top:10px;">No matches found. Try lowering the threshold.</p></div>';
+                        }
+
+                        btn.innerHTML = '<i class="fas fa-search"></i> Start Matching';
+                        btn.disabled = false;
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
