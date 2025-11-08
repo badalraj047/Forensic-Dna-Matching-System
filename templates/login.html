@@ -247,6 +247,8 @@
 
         .input-wrapper {
             position: relative;
+            display: flex;
+            align-items: center;
         }
 
         .form-group input {
@@ -261,6 +263,7 @@
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
             z-index: 2;
+            padding-right: 45px;
         }
 
         .form-group input::placeholder {
@@ -275,6 +278,32 @@
                 0 0 25px rgba(14, 165, 233, 0.3),
                 inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
             transform: translateY(-2px);
+        }
+
+        /* PASSWORD TOGGLE BUTTON */
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: #0ea5e9;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        .password-toggle:hover {
+            color: #06b6d4;
+            transform: scale(1.15);
+        }
+
+        .password-toggle:active {
+            transform: scale(0.95);
         }
 
         .login-btn {
@@ -497,7 +526,7 @@
                         <div class="login-icon"><i class="fas fa-lock"></i></div>
                     </div>
                     <h1>Login</h1>
-                    <p>🧬 Forensic DNA Matching</p>
+                    <p>Forensic DNA Matching</p>
                 </div>
 
                 <div class="message error-message" id="errorMessage"></div>
@@ -515,6 +544,9 @@
                         <label for="password">🔑 Password</label>
                         <div class="input-wrapper">
                             <input type="password" id="password" name="password" placeholder="Password" required>
+                            <button type="button" class="password-toggle" id="passwordToggle" onclick="togglePassword('password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -553,6 +585,20 @@
     </div>
 
     <script>
+        // SHOW/HIDE PASSWORD FUNCTION
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggle = document.getElementById('passwordToggle');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                field.type = 'password';
+                toggle.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+
         const loginForm = document.getElementById('loginForm');
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
