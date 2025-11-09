@@ -8,9 +8,31 @@ import secrets
 import random
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
+# ===== PERSISTENT SECRET KEY =====
+SECRET_KEY_FILE = 'secret_key.txt'
 
-# In-memory storage
+def get_or_create_secret_key():
+    """Get persistent secret key for Flask sessions"""
+    if os.path.exists(SECRET_KEY_FILE):
+        try:
+            with open(SECRET_KEY_FILE, 'r') as f:
+                return f.read().strip()
+        except Exception as e:
+            print(f"⚠ Error reading secret key: {e}")
+
+    # Create new secret key
+    new_key = secrets.token_hex(32)
+    try:
+        with open(SECRET_KEY_FILE, 'w') as f:
+            f.write(new_key)
+        print("✓ Created new persistent secret key")
+    except Exception as e:
+        print(f"⚠ Error saving secret key: {e}")
+    return new_key
+
+app.secret_key = get_or_create_secret_key()
+
+# In-memory storage with persistence
 DATABASE = {
     'profiles': [],
     'encrypted_profiles': [],
@@ -21,6 +43,38 @@ DATABASE = {
 
 # ===== DATABASE PERSISTENCE =====
 DATABASE_FILE = 'profiles_database.json'
+USERS_FILE = 'users_database.json'
+
+def load_users_from_file():
+    """Load all users from persistent JSON file"""
+    global DATABASE
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, 'r') as f:
+                data = json.load(f)
+                DATABASE['users'] = data.get('users', [])
+                print(f"✓ Loaded {len(DATABASE['users'])} users from database")
+                return True
+        except Exception as e:
+            print(f"⚠ Error loading users: {e}")
+            return False
+    return False
+
+def save_users_to_file():
+    """Save all users to persistent JSON file"""
+    try:
+        data = {
+            'version': '1.0',
+            'created_at': datetime.now().isoformat(),
+            'total_users': len(DATABASE['users']),
+            'users': DATABASE['users']
+        }
+        with open(USERS_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+        return True
+    except Exception as e:
+        print(f"⚠ Error saving users: {e}")
+        return False
 
 def load_database_from_file():
     """Load all profiles from persistent JSON file"""
@@ -54,6 +108,10 @@ def save_database_to_file():
         return False
 
 # ===== END DATABASE PERSISTENCE =====
+
+# ===== LOAD DATA AT STARTUP =====
+load_users_from_file()
+load_database_from_file()
 
 # ===== USER AUTHENTICATION =====
 def find_user_by_email(email):
