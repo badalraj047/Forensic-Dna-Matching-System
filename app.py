@@ -9,28 +9,7 @@ import random
 
 app = Flask(__name__)
 # ===== PERSISTENT SECRET KEY =====
-SECRET_KEY_FILE = 'secret_key.txt'
-
-def get_or_create_secret_key():
-    """Get persistent secret key for Flask sessions"""
-    if os.path.exists(SECRET_KEY_FILE):
-        try:
-            with open(SECRET_KEY_FILE, 'r') as f:
-                return f.read().strip()
-        except Exception as e:
-            print(f"⚠ Error reading secret key: {e}")
-
-    # Create new secret key
-    new_key = secrets.token_hex(32)
-    try:
-        with open(SECRET_KEY_FILE, 'w') as f:
-            f.write(new_key)
-        print("✓ Created new persistent secret key")
-    except Exception as e:
-        print(f"⚠ Error saving secret key: {e}")
-    return new_key
-
-app.secret_key = get_or_create_secret_key()
+app.secret_key = os.environ.get('SECRET_KEY', 'dev_secret_fallback_key')
 
 # In-memory storage with persistence
 DATABASE = {
