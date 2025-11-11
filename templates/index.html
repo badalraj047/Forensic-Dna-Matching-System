@@ -823,7 +823,113 @@
             .stats-grid, .actions-grid { gap: 20px; }
             .stat-card, .action-card { padding: 30px 20px; }
         }
-    </style>
+            /* Settings Dropdown Styles */
+        .settings-dropdown {
+            position: fixed;
+            top: 25px;
+            left: 90px;
+            z-index: 1000;
+        }
+
+        .settings-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(30, 58, 138, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-size: 1.2em;
+            color: white;
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .settings-btn:hover {
+            background: rgba(14, 165, 233, 0.3);
+            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.35);
+            transform: scale(1.1);
+        }
+
+        .settings-menu {
+            display: none;
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 58, 138, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(14, 165, 233, 0.5);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 160px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .settings-menu.active {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .settings-menu-item {
+            padding: 12px 20px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .settings-menu-item:hover {
+            background: rgba(14, 165, 233, 0.4);
+            padding-left: 24px;
+            color: #0ea5e9;
+        }
+
+        .settings-menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .settings-menu-item:first-child {
+            border-radius: 12px 12px 0 0;
+        }
+
+        .settings-menu-item:last-child {
+            border-radius: 0 0 12px 12px;
+        }
+
+        body.light-mode .settings-menu {
+            background: rgba(248, 250, 252, 0.95);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+        }
+
+        body.light-mode .settings-menu-item {
+            color: #1e293b;
+        }
+
+        body.light-mode .settings-menu-item:hover {
+            background: rgba(14, 165, 233, 0.15);
+            color: #0ea5e9;
+        }
+        </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
     
@@ -831,10 +937,19 @@
         <span id="themeIcon">🌙</span>
     </div>
     
-    <div style="position: fixed; top: 25px; left: 20px; z-index: 1000;">
-        <div style="background: rgba(30, 58, 138, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(14, 165, 233, 0.3); padding: 12px 20px; border-radius: 20px; color: white; font-size: 0.9em;">
-            <span id="userDisplay"></span>
-            <a href="/logout" style="margin-left: 15px; color: #ef4444; text-decoration: none; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.color='#fca5a5'" onmouseout="this.style.color='#ef4444'">Logout</a>
+    <div class="settings-dropdown">
+        <button class="settings-btn" id="settingsBtn" onclick="toggleSettingsMenu()" title="Settings">
+            <i class="fas fa-cog"></i>
+        </button>
+        <div class="settings-menu" id="settingsMenu">
+            <a href="/profile" class="settings-menu-item">
+                <i class="fas fa-user-circle"></i>
+                <span>My Profile</span>
+            </a>
+            <a href="/logout" class="settings-menu-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
         </div>
     </div>
 
@@ -1206,5 +1321,22 @@
     // ===== END DATABASE MANAGEMENT FUNCTIONS =====
     </script>
 
+
+    <script>
+        function toggleSettingsMenu() {
+            const menu = document.getElementById('settingsMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsMenu = document.getElementById('settingsMenu');
+
+            if (settingsBtn && settingsMenu && !settingsBtn.contains(event.target) && !settingsMenu.contains(event.target)) {
+                settingsMenu.classList.remove('active');
+            }
+        });
+    </script>
 </body>
 </html>
