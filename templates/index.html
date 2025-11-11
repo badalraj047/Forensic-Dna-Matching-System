@@ -1164,6 +1164,16 @@
             });
         });
 
+        // LOAD IMMEDIATELY when page opens
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                animateCounter('totalProfiles', data.total_profiles);
+                animateCounter('encryptedProfiles', data.encrypted_profiles);
+                animateCounter('totalMatches', data.total_matches);
+            });
+
+        // Then refresh every 5 seconds
         setInterval(function() {
             fetch('/api/stats')
                 .then(response => response.json())
@@ -1172,7 +1182,8 @@
                     animateCounter('encryptedProfiles', data.encrypted_profiles);
                     animateCounter('totalMatches', data.total_matches);
                 });
-        }, 3000);
+        }, 5000);
+
 
         function animateCounter(elementId, targetValue) {
             const element = document.getElementById(elementId);
@@ -1186,7 +1197,7 @@
                 setTimeout(() => {
                     current += increment;
                     element.textContent = Math.round(current);
-                }, (i * 50));
+                }, (i * 20));
             }
         }
     </script>
