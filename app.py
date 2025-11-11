@@ -21,7 +21,7 @@ DATABASE = {
 }
 
 # ===== DATABASE PERSISTENCE =====
-DATABASE_FILE = 'profiles_database.json'
+DATABASE_FILE = 'profiles_database_realistic_10000.json'
 USERS_FILE = 'users_database.json'
 
 def load_users_from_file():
