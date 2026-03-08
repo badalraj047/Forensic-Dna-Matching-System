@@ -131,21 +131,6 @@
             transition: all 0.3s ease;
         }
 
-        #notificationBell.blink {
-            animation: bellBlink 0.6s infinite;
-        }
-
-        @keyframes bellBlink {
-            0%, 100% { 
-                transform: scale(1);
-                filter: drop-shadow(0 0 8px rgba(14, 165, 233, 0.6));
-            }
-            50% { 
-                transform: scale(1.15);
-                filter: drop-shadow(0 0 15px rgba(14, 165, 233, 1));
-            }
-        }
-
         #notificationCount {
             position: absolute;
             top: -8px;
@@ -840,14 +825,17 @@
             .features-section { padding: 22px 14px; border-radius: 14px; }
             .features-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
 
-            /* Floating buttons — row at top */
+            /* ── Mobile top bar: settings | [spacer] | theme | bell ── */
             .settings-dropdown { top: 14px; left: 14px; }
-            .settings-btn { width: 38px; height: 38px; font-size: 0.9em; }
-            .theme-toggle { top: 14px; right: 60px; width: 38px; height: 38px; font-size: 0.9em; padding: 0; }
+            .settings-btn      { width: 38px; height: 38px; font-size: 0.88em; }
+            .settings-menu     { left: 0; transform: none; top: 48px; min-width: 150px; }
+
+            .theme-toggle      { top: 14px; right: 62px; width: 38px; height: 38px; font-size: 0.88em; padding: 0; border-radius: 50%; }
+
             .notification-container { top: 14px; right: 14px; }
-            .notification-button { width: 38px; height: 38px; }
+            .notification-button    { width: 38px; height: 38px; font-size: 0.9em; }
+            #notificationCount { width: 17px; height: 17px; font-size: 0.58rem; top: -4px; right: -4px; border-width: 1.5px; }
             #notificationPanel { width: calc(100vw - 28px); right: 14px; top: 62px; }
-            #notificationCount { width: 18px; height: 18px; font-size: 0.6rem; top: -4px; right: -4px; }
 
             /* DB section inline styles override */
             .container section, .container > div { max-width: 100% !important; }
@@ -913,13 +901,19 @@
         }
 
         @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-10px);
+            from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .settings-menu {
+                left: 0;
+                transform: none;
+                animation: slideDownMobile 0.2s ease-out;
             }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
+            @keyframes slideDownMobile {
+                from { opacity: 0; transform: translateY(-6px); }
+                to   { opacity: 1; transform: translateY(0); }
             }
         }
 
@@ -1258,9 +1252,8 @@
             // Mark all seen immediately on open
             fetch('/api/notifications/mark-seen', { method: 'POST' })
                 .then(() => {
-                    // Hide count badge and stop blink right away
+                    // Hide count badge right away
                     notificationCount.style.display = 'none';
-                    notificationBell.classList.remove('blink');
                     // Re-render list with seen styling
                     renderNotifications(allNotifications, true);
                 });
@@ -1307,10 +1300,8 @@
                 if (unreadCount > 0) {
                     notificationCount.textContent = unreadCount;
                     notificationCount.style.display = 'flex';
-                    notificationBell.classList.add('blink');
                 } else {
                     notificationCount.style.display = 'none';
-                    notificationBell.classList.remove('blink');
                 }
 
                 // Only re-render if panel is closed (don't override seen state while open)

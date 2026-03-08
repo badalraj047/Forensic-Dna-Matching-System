@@ -1,5 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+{% set flag_map = {
+    'India': '🇮🇳', 'USA': '🇺🇸', 'United States': '🇺🇸',
+    'UK': '🇬🇧', 'United Kingdom': '🇬🇧',
+    'Japan': '🇯🇵', 'China': '🇨🇳',
+    'Australia': '🇦🇺', 'Canada': '🇨🇦',
+    'Europe': '🇪🇺', 'Germany': '🇩🇪',
+    'France': '🇫🇷', 'Italy': '🇮🇹', 'Spain': '🇪🇸'
+} %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -439,7 +447,7 @@
 
                                 <div class="pc-field">
                                     <div class="pc-field-lbl"><i class="fas fa-flag"></i> Country</div>
-                                    <div class="pc-field-val blue">{{ match.country or match.region or 'N/A' }}</div>
+                                    <div class="pc-field-val blue">{{ flag_map.get(match.country or match.region, '🌍') }} {{ match.country or match.region or 'N/A' }}</div>
                                 </div>
 
                                 <div class="pc-field">

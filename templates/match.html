@@ -1128,6 +1128,19 @@
 
         // --- Fetch real profile count from /api/stats on page load ---
         let realProfileCount = 0;
+
+        // Country → flag emoji
+        function getFlag(country) {
+            const flags = {
+                'India': '🇮🇳', 'USA': '🇺🇸', 'United States': '🇺🇸',
+                'UK': '🇬🇧', 'United Kingdom': '🇬🇧',
+                'Japan': '🇯🇵', 'China': '🇨🇳',
+                'Australia': '🇦🇺', 'Canada': '🇨🇦',
+                'Europe': '🇪🇺', 'Germany': '🇩🇪', 'France': '🇫🇷',
+                'Italy': '🇮🇹', 'Spain': '🇪🇸'
+            };
+            return flags[country] || '🌍';
+        }
         fetch('/api/stats')
             .then(r => r.json())
             .then(d => { if(d.total_profiles) realProfileCount = d.total_profiles; })
@@ -1291,7 +1304,7 @@
                                 </div>
                                 <div class="rc-field">
                                     <div class="rc-field-label"><i class="fas fa-flag"></i> Country</div>
-                                    <div class="rc-field-value blue">${r.country || r.region || 'N/A'}</div>
+                                    <div class="rc-field-value blue">${getFlag(r.country || r.region)} ${r.country || r.region || 'N/A'}</div>
                                 </div>
                                 <div class="rc-field">
                                     <div class="rc-field-label"><i class="fas fa-tag"></i> Profile Type</div>
