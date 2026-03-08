@@ -625,6 +625,118 @@
             color: #00d4ff;
             font-weight: 700;
         }
+
+        /* ---- Verdict Screen ---- */
+        #overlayVerdict {
+            display: none;
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            background: rgba(5, 10, 25, 0.97);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 40px 20px;
+            animation: verdictIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #overlayVerdict.show { display: flex; }
+
+        @keyframes verdictIn {
+            from { opacity: 0; transform: scale(0.88); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .verdict-icon {
+            font-size: 5em;
+            line-height: 1;
+            animation: iconPulseV 1s ease-in-out infinite alternate;
+        }
+        @keyframes iconPulseV {
+            from { transform: scale(1);    filter: drop-shadow(0 0 20px currentColor); }
+            to   { transform: scale(1.1);  filter: drop-shadow(0 0 50px currentColor); }
+        }
+
+        .verdict-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 2.8em;
+            font-weight: 800;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .verdict-title.matched  { color: #10b981; text-shadow: 0 0 40px rgba(16,185,129,0.8); }
+        .verdict-title.no-match { color: #ef4444; text-shadow: 0 0 40px rgba(239,68,68,0.8); }
+
+        .verdict-sub {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9em;
+            letter-spacing: 2px;
+            text-align: center;
+            opacity: 0.8;
+        }
+        .verdict-sub.matched  { color: #6ee7b7; }
+        .verdict-sub.no-match { color: #fca5a5; }
+
+        .verdict-matches {
+            width: 100%;
+            max-width: 460px;
+            max-height: 240px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+        .verdict-matches::-webkit-scrollbar { width: 4px; }
+        .verdict-matches::-webkit-scrollbar-thumb { background: rgba(0,210,255,0.3); border-radius: 2px; }
+
+        .verdict-match-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.35);
+            border-left: 4px solid #10b981;
+            border-radius: 10px;
+            padding: 11px 15px;
+            animation: rowSlideIn 0.35s ease-out both;
+        }
+        @keyframes rowSlideIn {
+            from { opacity: 0; transform: translateX(-18px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        .verdict-match-id {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78em;
+            color: #e2e8f0;
+        }
+        .verdict-match-right { display: flex; align-items: center; gap: 8px; }
+        .verdict-match-score {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 3px 11px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.82em;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+        }
+        .verdict-match-enc { font-size: 0.75em; color: #10b981; }
+
+        .verdict-btn {
+            padding: 12px 38px;
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9, #06b6d4);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Sora', sans-serif;
+            font-size: 0.95em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(14,165,233,0.35);
+            transition: all 0.3s ease;
+        }
+        .verdict-btn:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(14,165,233,0.55); }
     </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
@@ -735,6 +847,17 @@
                 PROFILES SCANNED: <span id="overlayCount">0</span>
             </div>
         </div>
+
+        <!-- Verdict screen shown after scan completes -->
+        <div id="overlayVerdict">
+            <div class="verdict-icon" id="verdictIcon"></div>
+            <div class="verdict-title" id="verdictTitle"></div>
+            <div class="verdict-sub"  id="verdictSub"></div>
+            <div class="verdict-matches" id="verdictMatches"></div>
+            <button class="verdict-btn" onclick="closeVerdictAndShow()">
+                <i class="fas fa-chart-bar"></i>&nbsp; View Full Report
+            </button>
+        </div>
     </div>
     <!-- ===== END FORENSIC OVERLAY ===== -->
 
@@ -844,17 +967,27 @@
         ];
 
         let overlayTimers = [];
-        let countTimer = null;
+        let countTimer    = null;
+        let pendingData   = null;   // stores API response until user clicks "View Full Report"
 
-        function startForensicOverlay(totalProfiles) {
+        // --- Fetch real profile count from /api/stats on page load ---
+        let realProfileCount = 0;
+        fetch('/api/stats')
+            .then(r => r.json())
+            .then(d => { if(d.total_profiles) realProfileCount = d.total_profiles; })
+            .catch(() => {});
+
+        function startForensicOverlay() {
             const overlay    = document.getElementById('forensicOverlay');
             const statusEl   = document.getElementById('overlayStatus');
             const progressEl = document.getElementById('overlayProgressBar');
             const countEl    = document.getElementById('overlayCount');
             const chips      = document.querySelectorAll('.loci-chip');
+            const verdict    = document.getElementById('overlayVerdict');
 
-            // Reset all chips
-            chips.forEach(c => { c.classList.remove('scanned', 'matched'); });
+            // Reset
+            chips.forEach(c => c.classList.remove('scanned', 'matched'));
+            verdict.classList.remove('show');
             progressEl.style.width = '0%';
             countEl.textContent = '0';
             statusEl.textContent = 'Initializing secure channel...';
@@ -862,7 +995,7 @@
 
             overlay.classList.add('active');
 
-            // Phase messages + progress
+            // Phase messages + progress bar
             FORENSIC_PHASES.forEach(phase => {
                 const t = setTimeout(() => {
                     statusEl.style.opacity = '0';
@@ -875,44 +1008,123 @@
                 overlayTimers.push(t);
             });
 
-            // Loci chips — light up one by one over ~3s
+            // Loci chips light up one by one
             chips.forEach((chip, i) => {
                 const t = setTimeout(() => {
                     chip.classList.add('scanned');
-                    // Last few turn green as "matched"
-                    if (i >= 15) {
-                        setTimeout(() => chip.classList.add('matched'), 300);
-                    }
+                    if (i >= 15) setTimeout(() => chip.classList.add('matched'), 300);
                 }, 900 + i * 160);
                 overlayTimers.push(t);
             });
 
-            // Profile counter animation
-            const target = totalProfiles || 500;
+            // PROFILES SCANNED counter — uses real count from /api/stats
+            const target = realProfileCount > 0 ? realProfileCount : 1000;
             let current = 0;
-            const step = Math.ceil(target / 60);
+            const step = Math.max(1, Math.ceil(target / 70));
             countTimer = setInterval(() => {
-                current = Math.min(current + step + Math.floor(Math.random() * step), target);
+                current = Math.min(current + step + Math.floor(Math.random() * step * 0.5), target);
                 countEl.textContent = current.toLocaleString();
                 if (current >= target) clearInterval(countTimer);
-            }, 60);
+            }, 55);
         }
 
-        function stopForensicOverlay() {
-            overlayTimers.forEach(t => clearTimeout(t));
-            clearInterval(countTimer);
-            const overlay = document.getElementById('forensicOverlay');
-            const progressEl = document.getElementById('overlayProgressBar');
-            progressEl.style.width = '100%';
+        function showVerdict(data) {
+            pendingData = data;
+            const verdict    = document.getElementById('overlayVerdict');
+            const icon       = document.getElementById('verdictIcon');
+            const title      = document.getElementById('verdictTitle');
+            const sub        = document.getElementById('verdictSub');
+            const matchesDiv = document.getElementById('verdictMatches');
+
+            // Clear overlay inner (hide scanning UI) and show verdict
+            document.querySelector('.overlay-inner').style.display = 'none';
+            verdict.classList.add('show');
+
+            const hasMatch = data.success && data.results && data.results.length > 0;
+
+            if (hasMatch) {
+                icon.textContent  = '✅';
+                icon.style.color  = '#10b981';
+                title.textContent = 'MATCHED';
+                title.className   = 'verdict-title matched';
+                sub.textContent   = `${data.matches_found} profile${data.matches_found > 1 ? 's' : ''} found in database`;
+                sub.className     = 'verdict-sub matched';
+
+                // Show match rows
+                matchesDiv.innerHTML = '';
+                data.results.forEach((r, i) => {
+                    const row = document.createElement('div');
+                    row.className = 'verdict-match-row';
+                    row.style.animationDelay = (i * 0.08) + 's';
+                    row.innerHTML = `
+                        <div class="verdict-match-id"><i class="fas fa-dna" style="color:#10b981;margin-right:6px;"></i>${r.target_id}</div>
+                        <div class="verdict-match-right">
+                            ${r.encrypted ? '<span class="verdict-match-enc"><i class="fas fa-lock"></i></span>' : ''}
+                            <div class="verdict-match-score">${(r.score * 100).toFixed(2)}%</div>
+                        </div>`;
+                    matchesDiv.appendChild(row);
+                });
+            } else {
+                icon.textContent  = '❌';
+                icon.style.color  = '#ef4444';
+                title.textContent = 'NOT MATCHED';
+                title.className   = 'verdict-title no-match';
+                sub.textContent   = 'No profiles meet the similarity threshold';
+                sub.className     = 'verdict-sub no-match';
+                matchesDiv.innerHTML = `
+                    <div style="text-align:center;padding:20px 0;font-family:'Space Mono',monospace;font-size:0.82em;color:rgba(239,68,68,0.6);letter-spacing:1px;">
+                        <i class="fas fa-fingerprint" style="font-size:2em;display:block;margin-bottom:10px;opacity:0.4;"></i>
+                        TRY LOWERING THE THRESHOLD
+                    </div>`;
+            }
+        }
+
+        function closeVerdictAndShow() {
+            const overlay    = document.getElementById('forensicOverlay');
+            const innerWrap  = document.querySelector('.overlay-inner');
+
+            overlay.style.opacity    = '0';
+            overlay.style.transition = 'opacity 0.4s ease';
+
             setTimeout(() => {
-                overlay.style.opacity = '0';
-                overlay.style.transition = 'opacity 0.4s ease';
-                setTimeout(() => {
-                    overlay.classList.remove('active');
-                    overlay.style.opacity = '';
-                    overlay.style.transition = '';
-                }, 400);
-            }, 300);
+                overlay.classList.remove('active');
+                overlay.style.opacity    = '';
+                overlay.style.transition = '';
+                innerWrap.style.display  = '';   // restore for next run
+
+                // Now populate and reveal the full results section
+                const results = document.getElementById('resultsContainer');
+                const content = document.getElementById('resultsContent');
+                results.style.display = 'block';
+                results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                const d = pendingData;
+                if (d && d.success && d.results.length > 0) {
+                    let html = `<div style="padding:16px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:10px;margin-bottom:20px;border-left:4px solid #10b981;">
+                        <i class="fas fa-check-circle"></i> <strong>Found ${d.matches_found} match(es)</strong></div>`;
+                    d.results.forEach((r, i) => {
+                        html += `<div class="result-card" style="animation-delay:${i*0.1}s;">
+                            <div class="result-header">
+                                <div class="result-id">${r.target_id}</div>
+                                <div class="result-score">${(r.score*100).toFixed(2)}%</div>
+                            </div>
+                            <div class="result-status">
+                                <span class="badge badge-match"><i class="fas fa-check"></i> ${r.status}</span>
+                                ${r.encrypted ? '<span style="color:#10b981;margin-left:8px;"><i class="fas fa-lock"></i> Encrypted</span>' : ''}
+                            </div>
+                        </div>`;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = `<div style="text-align:center;padding:30px;color:#cbd5e1;">
+                        <i class="fas fa-inbox" style="font-size:2em;"></i>
+                        <p style="margin-top:10px;">No matches found. Try lowering the threshold.</p>
+                    </div>`;
+                }
+
+                document.querySelector('.btn[type=submit]').innerHTML = '<i class="fas fa-search"></i> Start Matching';
+                document.querySelector('.btn[type=submit]').disabled  = false;
+            }, 400);
         }
 
         const form = document.getElementById('matchForm');
@@ -922,49 +1134,26 @@
                 const btn = e.target.querySelector('.btn');
                 btn.disabled = true;
 
-                // Kick off the overlay
-                startForensicOverlay(0);
+                startForensicOverlay();
 
                 const data = new FormData(form);
-
-                // Minimum display time of 5 seconds for full effect
                 const MIN_DISPLAY = 5000;
-                const startTime = Date.now();
+                const startTime   = Date.now();
 
                 fetch('/match', { method: 'POST', body: data })
                     .then(r => r.json())
                     .then(d => {
-                        const elapsed = Date.now() - startTime;
+                        const elapsed   = Date.now() - startTime;
                         const remaining = Math.max(0, MIN_DISPLAY - elapsed);
-
-                        setTimeout(() => {
-                            stopForensicOverlay();
-
-                            setTimeout(() => {
-                                const results = document.getElementById('resultsContainer');
-                                const content = document.getElementById('resultsContent');
-                                results.style.display = 'block';
-                                results.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                                if(d.success && d.results.length > 0) {
-                                    let html = '<div style="padding:16px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:10px;margin-bottom:20px;border-left:4px solid #10b981;"><i class="fas fa-check-circle"></i> <strong>Found ' + d.matches_found + ' match(es)</strong></div>';
-                                    d.results.forEach((r, i) => {
-                                        html += `<div class="result-card" style="animation-delay:${i*0.1}s;"><div class="result-header"><div class="result-id">${r.target_id}</div><div class="result-score">${(r.score*100).toFixed(2)}%</div></div><div class="result-status"><span class="badge badge-match"><i class="fas fa-check"></i> ${r.status}</span>${r.encrypted ? ' <span style="color:#10b981;"><i class="fas fa-lock"></i> Encrypted</span>' : ''}</div></div>`;
-                                    });
-                                    content.innerHTML = html;
-                                } else {
-                                    content.innerHTML = '<div style="text-align:center;padding:30px;color:#cbd5e1;"><i class="fas fa-inbox"></i><p style="margin-top:10px;">No matches found. Try lowering the threshold.</p></div>';
-                                }
-
-                                btn.innerHTML = '<i class="fas fa-search"></i> Start Matching';
-                                btn.disabled = false;
-                            }, 500);
-                        }, remaining);
+                        // Wait for minimum display, then show verdict inside overlay
+                        setTimeout(() => showVerdict(d), remaining);
                     })
                     .catch(() => {
-                        stopForensicOverlay();
+                        clearInterval(countTimer);
+                        overlayTimers.forEach(t => clearTimeout(t));
+                        document.getElementById('forensicOverlay').classList.remove('active');
                         btn.innerHTML = '<i class="fas fa-search"></i> Start Matching';
-                        btn.disabled = false;
+                        btn.disabled  = false;
                     });
             });
         }
