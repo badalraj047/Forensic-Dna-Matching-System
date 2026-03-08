@@ -3,677 +3,577 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crime Scene DNA Matching - Forensic DNA System</title>
+    <title>Crime Scene Matching — Forensic DNA System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        :root {
+            --bg: #0f172a; --cyan: #0ea5e9; --cyan2: #06b6d4;
+            --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+            --text: #e2e8f0; --muted: #64748b;
+            --border: rgba(14,165,233,0.2); --surface: rgba(30,58,138,0.55);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #333;
-            min-height: 100vh;
-            padding: 20px;
+            font-family: 'Sora', sans-serif;
+            background: linear-gradient(to bottom, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
+            min-height: 100vh; color: var(--text); padding: 40px 20px;
+            transition: all 0.3s ease;
+        }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(14,165,233,0.03) 1px, transparent 1px),
+                              linear-gradient(90deg,rgba(14,165,233,0.03) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none; z-index: 0;
+        }
+        body.light-mode {
+            background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+            color: #1e293b; --text: #1e293b; --muted: #94a3b8;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
+        .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
+        /* theme toggle */
+        .theme-toggle {
+            position: fixed; top: 25px; right: 25px; z-index: 1000;
+            background: rgba(30,58,138,0.8); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); padding: 14px 18px;
+            border-radius: 50px; cursor: pointer; font-size: 1.2em; color: white;
+            transition: all 0.25s ease-out; box-shadow: 0 10px 30px rgba(14,165,233,0.3);
         }
+        body.light-mode .theme-toggle { background: rgba(248,250,252,0.95); border-color: #e2e8f0; color: #1e293b; }
+        .theme-toggle:hover { box-shadow: 0 14px 36px rgba(14,165,233,0.5); }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        /* nav */
+        .nav {
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); padding: 16px 24px;
+            border-radius: 15px; margin-bottom: 28px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
+        body.light-mode .nav { background: rgba(255,255,255,0.95); border-color: #e2e8f0; }
+        .nav a {
+            color: var(--cyan); text-decoration: none; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 8px; transition: all 0.25s ease-out;
         }
+        .nav a:hover { transform: translateX(-4px); }
 
-        .content {
-            padding: 30px;
+        /* page header */
+        .page-header {
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-left: 4px solid var(--red);
+            border-radius: 20px; padding: 36px 44px; margin-bottom: 28px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+            animation: fadeInDown 0.5s ease-out;
         }
+        body.light-mode .page-header { background: rgba(255,255,255,0.95); border-color: #e2e8f0; border-left-color: var(--red); }
+        @keyframes fadeInDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
 
-        .form-section {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            border-left: 4px solid #667eea;
+        .ph-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35);
+            color: #fca5a5; padding: 6px 14px; border-radius: 20px;
+            font-size: 0.75em; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; margin-bottom: 14px;
         }
-
-        .form-section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+        .page-header h1 {
+            font-size: 2.2em; font-weight: 800; margin-bottom: 8px;
+            background: linear-gradient(135deg, #fca5a5, #ef4444);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
+        body.light-mode .page-header h1 { background: linear-gradient(135deg, #dc2626, #b91c1c); -webkit-background-clip: text; background-clip: text; }
+        .page-header p { color: var(--muted); font-size: 0.95em; }
 
-        .form-group {
-            margin-bottom: 15px;
+        /* two-col layout */
+        .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+        /* card */
+        .card {
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 18px;
+            padding: 28px; box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.5s ease-out both;
         }
+        body.light-mode .card { background: rgba(255,255,255,0.95); border-color: #e2e8f0; }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
+        .card-title {
+            font-size: 0.72em; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--muted); margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
         }
+        .card-title i { color: var(--cyan); }
 
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 0.95em;
+        /* form */
+        .form-group { margin-bottom: 18px; }
+        label {
+            display: block; color: var(--text); font-weight: 600;
+            margin-bottom: 8px; font-size: 0.88em; text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+        body.light-mode label { color: #1e293b; }
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 150px;
+        input[type="text"], textarea {
+            width: 100%; padding: 11px 14px;
+            background: rgba(15,23,42,0.7); border: 2px solid rgba(14,165,233,0.25);
+            border-radius: 10px; color: var(--text);
+            font-family: 'Space Mono', monospace; font-size: 0.88em;
+            transition: border-color 0.25s ease-out;
         }
+        body.light-mode input[type="text"], body.light-mode textarea {
+            background: rgba(241,245,249,0.8); color: #1e293b; border-color: #cbd5e1;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none; border-color: var(--cyan);
+            box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+        }
+        textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
 
+        /* loci grid */
         .loci-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .locus-input {
-            display: flex;
-            align-items: center;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px,100%), 1fr));
             gap: 10px;
         }
-
-        .locus-input label {
-            margin: 0;
-            font-weight: 500;
-            min-width: 80px;
+        .locus-wrap { display: flex; flex-direction: column; gap: 5px; }
+        .locus-label {
+            font-family: 'Space Mono', monospace; font-size: 0.7em;
+            color: var(--cyan); font-weight: 700; letter-spacing: 0.5px;
+        }
+        .locus-wrap input {
+            padding: 8px 10px; font-size: 0.82em;
+            border-color: rgba(14,165,233,0.15);
         }
 
-        .locus-input input {
-            flex: 1;
-            margin: 0;
-            padding: 8px;
+        /* buttons */
+        .btn-row { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        .btn {
+            padding: 13px 24px; border: none; border-radius: 12px;
+            font-family: 'Sora', sans-serif; font-size: 0.9em;
+            font-weight: 700; cursor: pointer; transition: all 0.25s ease-out;
+            display: inline-flex; align-items: center; gap: 8px; letter-spacing: 0.5px;
         }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .button-group button {
-            padding: 12px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
         .btn-primary {
-            background: #667eea;
-            color: white;
-            flex: 1;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white; flex: 1;
+            box-shadow: 0 8px 24px rgba(239,68,68,0.35);
         }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(239,68,68,0.5); }
+        .btn-ghost {
+            background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.3);
+            color: var(--cyan);
+        }
+        .btn-ghost:hover { background: rgba(14,165,233,0.18); transform: translateY(-2px); }
 
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        /* loading */
+        #loading {
+            display: none; background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 18px; padding: 50px;
+            text-align: center; margin-bottom: 24px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.3);
         }
+        body.light-mode #loading { background: rgba(255,255,255,0.95); }
+        .spinner-ring {
+            width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 20px;
+            border: 3px solid rgba(14,165,233,0.15);
+            border-top-color: var(--red); border-right-color: var(--cyan);
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading p { color: var(--muted); font-size: 0.9em; margin-top: 8px; }
+        #loading strong { color: var(--text); font-size: 1.1em; }
 
-        .btn-secondary {
-            background: #e9ecef;
-            color: #333;
+        /* alert */
+        .alert {
+            display: none; padding: 14px 18px; border-radius: 12px;
+            margin-bottom: 18px; font-size: 0.88em; font-weight: 600;
+            border-left: 4px solid; animation: fadeInUp 0.3s ease-out;
         }
+        .alert.show { display: flex; align-items: center; gap: 10px; }
+        .alert-error  { background: rgba(239,68,68,0.1);  border-color: var(--red);   color: #fca5a5; }
+        .alert-success{ background: rgba(16,185,129,0.1); border-color: var(--green);  color: #6ee7b7; }
 
-        .btn-secondary:hover {
-            background: #dee2e6;
-        }
-
-        .results-section {
-            display: none;
-        }
-
-        .results-section.show {
-            display: block;
-        }
+        /* results */
+        #results-section { display: none; }
+        #results-section.show { display: block; }
 
         .results-header {
-            background: #fff3cd;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid rgba(16,185,129,0.3); border-left: 4px solid var(--green);
+            border-radius: 18px; padding: 24px 28px; margin-bottom: 22px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.4s ease-out;
         }
-
-        .results-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+        body.light-mode .results-header { background: rgba(255,255,255,0.95); }
+        .results-header h2 {
+            font-size: 1.3em; font-weight: 800; color: var(--green); margin-bottom: 12px;
         }
-
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
+        .rh-meta { display: flex; flex-wrap: wrap; gap: 16px; }
+        .rh-chip {
+            font-size: 0.78em; color: var(--muted);
+            display: flex; align-items: center; gap: 6px;
         }
+        .rh-chip strong { color: var(--text); }
 
-        .stat-card .number {
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 5px;
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 14px; margin-bottom: 24px;
         }
-
-        .stat-card .label {
-            font-size: 0.9em;
-            opacity: 0.9;
+        .scard {
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 16px;
+            padding: 22px; text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            animation: fadeInUp 0.4s ease-out both;
         }
+        body.light-mode .scard { background: rgba(255,255,255,0.95); border-color: #e2e8f0; }
+        .scard-num { font-family: 'Space Mono', monospace; font-size: 2.4em; font-weight: 700; }
+        .scard-lbl { font-size: 0.7em; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 4px; }
+        .scard.definite .scard-num { color: var(--green); }
+        .scard.probable .scard-num { color: var(--cyan); }
+        .scard.possible .scard-num { color: var(--amber); }
 
-        .matches-list {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
+        /* match cards */
+        .matches-wrap { display: flex; flex-direction: column; gap: 14px; }
+
+        .mc {
+            background: rgba(11,22,41,0.88); border: 1px solid rgba(14,165,233,0.18);
+            border-radius: 16px; overflow: hidden; transition: all 0.25s ease-out;
         }
+        body.light-mode .mc { background: rgba(248,250,252,0.9); border-color: #e2e8f0; }
+        .mc:hover { border-color: rgba(14,165,233,0.45); box-shadow: 0 10px 28px rgba(14,165,233,0.12); transform: translateY(-2px); }
+        .mc.definite { border-left: 4px solid var(--green); }
+        .mc.probable  { border-left: 4px solid var(--cyan);  }
+        .mc.possible  { border-left: 4px solid var(--amber); }
 
-        .match-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-            transition: all 0.3s;
+        .mc-top {
+            display: flex; align-items: center;
+            justify-content: space-between; padding: 16px 20px; gap: 14px; flex-wrap: wrap;
         }
-
-        .match-card:hover {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            transform: translateX(5px);
+        .mc-left { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
+        .mc-rank {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.85em; color: white;
         }
+        .mc-name { font-weight: 700; font-size: 0.95em; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        body.light-mode .mc-name { color: #1e293b; }
+        .mc-id { font-family: 'Space Mono', monospace; font-size: 0.68em; color: var(--muted); margin-top: 2px; }
 
-        .match-card.definite {
-            border-left-color: #28a745;
-            background: #f0fff4;
+        .mc-score {
+            font-family: 'Space Mono', monospace; font-weight: 700;
+            font-size: 0.9em; padding: 5px 14px; border-radius: 20px; flex-shrink: 0;
         }
+        .mc-score.definite { background: linear-gradient(135deg,#10b981,#059669); color:white; box-shadow: 0 4px 12px rgba(16,185,129,0.35); }
+        .mc-score.probable  { background: linear-gradient(135deg,#0ea5e9,#0284c7); color:white; box-shadow: 0 4px 12px rgba(14,165,233,0.35); }
+        .mc-score.possible  { background: linear-gradient(135deg,#f59e0b,#d97706); color:white; box-shadow: 0 4px 12px rgba(245,158,11,0.35); }
 
-        .match-card.probable {
-            border-left-color: #ffc107;
-            background: #fffbf0;
+        .mc-details {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+            border-top: 1px solid rgba(14,165,233,0.08);
         }
-
-        .match-card.possible {
-            border-left-color: #17a2b8;
-            background: #f0f7ff;
+        .mc-field {
+            padding: 11px 16px;
+            border-right: 1px solid rgba(14,165,233,0.07);
+            border-bottom: 1px solid rgba(14,165,233,0.07);
         }
+        .mc-field:last-child { border-right: none; }
+        .mc-fl { font-size: 0.64em; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+        .mc-fl i { color: var(--cyan); }
+        .mc-fv { font-size: 0.82em; font-weight: 600; color: var(--text); }
+        body.light-mode .mc-fv { color: #1e293b; }
+        .mc-fv.green { color: var(--green); }
+        .mc-fv.blue  { color: var(--cyan);  }
+        .mc-fv.amber { color: var(--amber); }
 
-        .match-rank {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 50%;
-            font-weight: bold;
-            min-width: 35px;
-            text-align: center;
-            margin-right: 15px;
-        }
+        .bar-wrap { height: 4px; background: rgba(14,165,233,0.1); border-radius: 2px; margin-top: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg,#0ea5e9,#10b981); }
 
-        .match-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .match-info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .match-info-item label {
-            font-weight: 600;
-            color: #666;
-        }
-
-        .match-info-item value {
-            color: #333;
-        }
-
-        .score-bar {
-            width: 100%;
-            height: 25px;
-            background: #e9ecef;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .score-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 0.85em;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .status-definite {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-probable {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-possible {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 30px;
-        }
-
-        .loading.show {
-            display: block;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #f5c6cb;
-            display: none;
-            margin-bottom: 20px;
-        }
-
-        .error.show {
-            display: block;
-        }
-
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 5px;
-            border-left: 4px solid #c3e6cb;
-            display: none;
-            margin-bottom: 20px;
-        }
-
-        .success.show {
-            display: block;
-        }
-
-        footer {
-            background: #f8f9fa;
-            padding: 20px;
-            text-align: center;
-            color: #666;
-            border-top: 1px solid #ddd;
-        }
-
+        /* mobile */
         @media (max-width: 768px) {
             body { padding: 10px 12px; }
             .theme-toggle { top: 12px; right: 12px; padding: 9px 11px; font-size: 0.95em; }
             .nav { padding: 11px 14px; margin-bottom: 14px; }
-            .card { padding: 20px 16px; border-radius: 16px; }
-            h1 { font-size: 1.6em !important; }
-            .loci-grid { grid-template-columns: repeat(auto-fit, minmax(min(160px,100%), 1fr)) !important; gap: 8px; }
-            .results-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
-            .match-pair { grid-template-columns: 1fr !important; }
-            .btn, button[type="submit"] { width: 100%; padding: 13px; font-size: 0.95em; }
-            select, input { font-size: 0.92em !important; }
+            .layout { grid-template-columns: 1fr; }
+            .page-header { padding: 22px 18px; }
+            .page-header h1 { font-size: 1.6em; }
+            .card { padding: 20px 16px; }
+            .loci-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stats-row { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .scard { padding: 16px 10px; }
+            .scard-num { font-size: 1.8em; }
+            .mc-top { padding: 13px 14px; }
+            .mc-details { grid-template-columns: 1fr 1fr; }
+            .btn-row { flex-direction: column; }
+            .btn-primary { flex: none; width: 100%; justify-content: center; }
         }
-
         @media (max-width: 420px) {
-            .loci-grid { grid-template-columns: 1fr 1fr !important; }
-            .results-grid { grid-template-columns: 1fr !important; }
+            .loci-grid { grid-template-columns: 1fr 1fr; }
+            .stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .scard-num { font-size: 1.5em; }
         }
     </style>
 </head>
-<body>
+<body{% if theme == 'light' %} class="light-mode"{% endif %}>
+
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-{% if theme == 'light' %}sun{% else %}moon{% endif %}"></i>
+    </div>
+
     <div class="container">
-        <div class="header">
-            <h1>🚨 CRIME SCENE DNA MATCHING</h1>
-            <p>Match DNA evidence from crime scene against forensic database</p>
+        <div class="nav"><a href="/"><i class="fas fa-arrow-left"></i> Back to Dashboard</a></div>
+
+        <div class="page-header">
+            <div class="ph-badge"><i class="fas fa-exclamation-triangle"></i> Crime Scene Analysis</div>
+            <h1><i class="fas fa-search"></i> Crime Scene DNA Matching</h1>
+            <p>Enter raw DNA allele values from a crime scene sample and match against all profiles in the database</p>
         </div>
 
-        <div class="content">
-            <!-- Error and Success Messages -->
-            <div id="error-message" class="error"></div>
-            <div id="success-message" class="success"></div>
+        <div id="error-message" class="alert alert-error"><i class="fas fa-times-circle"></i> <span id="error-text"></span></div>
+        <div id="success-message" class="alert alert-success"><i class="fas fa-check-circle"></i> <span id="success-text"></span></div>
 
-            <!-- INPUT FORM SECTION -->
-            <div class="form-section">
-                <h2>📋 Enter Crime Scene DNA Sample</h2>
+        <!-- INPUT SECTION -->
+        <div class="layout">
+            <!-- Sample ID + JSON paste -->
+            <div class="card" style="animation-delay:0.05s;">
+                <div class="card-title"><i class="fas fa-fingerprint"></i> Sample Info</div>
 
                 <div class="form-group">
-                    <label for="sample-id">Sample ID (e.g., CRIME_2024_11_01)</label>
-                    <input type="text" id="sample-id" value="CRIME_2024_11_01" placeholder="Auto-generated if empty">
+                    <label>Sample ID</label>
+                    <input type="text" id="sample-id" value="CRIME_2024_001" placeholder="e.g. CRIME_2024_001">
                 </div>
 
                 <div class="form-group">
-                    <label>Enter DNA Markers (20 CODIS Loci)</label>
-                    <div class="loci-grid" id="loci-inputs">
-                        <!-- Will be generated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="json-paste">Or Paste JSON Profile:</label>
+                    <label>Or Paste JSON Profile</label>
                     <textarea id="json-paste" placeholder='{"markers": {"D3S1358": [14, 16], "D5S818": [11, 12], ...}}'></textarea>
                 </div>
 
-                <div class="button-group">
-                    <button class="btn-primary" onclick="matchCrimeScene()">🔍 MATCH AGAINST DATABASE</button>
-                    <button class="btn-secondary" onclick="loadSampleData()">📝 Load Sample Data</button>
+                <div class="btn-row">
+                    <button class="btn btn-ghost" onclick="loadSampleData()">
+                        <i class="fas fa-flask"></i> Load Sample Data
+                    </button>
                 </div>
             </div>
 
-            <!-- LOADING SECTION -->
-            <div id="loading" class="loading">
-                <div class="spinner"></div>
-                <p>Matching crime scene DNA against database...</p>
-                <p id="processing-text">Processing: 0%</p>
-            </div>
-
-            <!-- RESULTS SECTION -->
-            <div id="results-section" class="results-section">
-                <div class="results-header">
-                    <h2>✓ MATCHING COMPLETE</h2>
-                    <p>Crime Sample ID: <strong id="result-sample-id"></strong></p>
-                    <p>Searched Against: <strong id="result-total-profiles"></strong> profiles</p>
-                    <p>Timestamp: <strong id="result-timestamp"></strong></p>
-                </div>
-
-                <div class="results-stats">
-                    <div class="stat-card">
-                        <div class="number" id="definite-count">0</div>
-                        <div class="label">DEFINITE MATCHES</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="number" id="probable-count">0</div>
-                        <div class="label">PROBABLE MATCHES</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="number" id="possible-count">0</div>
-                        <div class="label">POSSIBLE MATCHES</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <button class="btn-primary" onclick="downloadResults()">📥 Download Results (PDF)</button>
-                </div>
-
-                <div class="matches-list">
-                    <h3 style="margin-bottom: 20px; color: #333;">🎯 TOP 10 SUSPECT MATCHES</h3>
-                    <div id="matches-container">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
+            <!-- Loci inputs -->
+            <div class="card" style="animation-delay:0.1s;">
+                <div class="card-title"><i class="fas fa-dna"></i> 20 CODIS Loci — Enter Allele Pairs (e.g. 14,16)</div>
+                <div class="loci-grid" id="loci-inputs"></div>
             </div>
         </div>
 
-        <footer>
-            <p>🧬 Privacy-Aware Forensic DNA Matching System | Capstone Project</p>
-            <p>© 2025 Forensic DNA Database</p>
-        </footer>
+        <!-- Match button -->
+        <div class="btn-row" style="margin-bottom:28px;">
+            <button class="btn btn-primary" onclick="matchCrimeScene()" style="font-size:1em;padding:15px 32px;">
+                <i class="fas fa-search"></i> Match Against Database
+            </button>
+        </div>
+
+        <!-- LOADING -->
+        <div id="loading">
+            <div class="spinner-ring"></div>
+            <strong>Scanning database...</strong>
+            <p>Comparing crime scene DNA against all profiles</p>
+        </div>
+
+        <!-- RESULTS -->
+        <div id="results-section">
+            <div class="results-header">
+                <h2><i class="fas fa-check-circle"></i> Matching Complete</h2>
+                <div class="rh-meta">
+                    <div class="rh-chip"><i class="fas fa-fingerprint"></i> Sample: <strong id="result-sample-id"></strong></div>
+                    <div class="rh-chip"><i class="fas fa-database"></i> Searched: <strong id="result-total-profiles"></strong> profiles</div>
+                    <div class="rh-chip"><i class="fas fa-clock"></i> <strong id="result-timestamp"></strong></div>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="scard definite" style="animation-delay:0.05s;">
+                    <div class="scard-num" id="definite-count">0</div>
+                    <div class="scard-lbl">Definite</div>
+                </div>
+                <div class="scard probable" style="animation-delay:0.1s;">
+                    <div class="scard-num" id="probable-count">0</div>
+                    <div class="scard-lbl">Probable</div>
+                </div>
+                <div class="scard possible" style="animation-delay:0.15s;">
+                    <div class="scard-num" id="possible-count">0</div>
+                    <div class="scard-lbl">Possible</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:0;">
+                <div class="card-title"><i class="fas fa-list-ol"></i> Top 10 Suspect Matches</div>
+                <div class="matches-wrap" id="matches-container"></div>
+            </div>
+        </div>
+
     </div>
 
     <script>
         const CODIS_LOCI = [
-            'CSF1PO', 'D3S1358', 'D5S818', 'D7S820', 'D8S1179',
-            'D13S317', 'D16S539', 'D18S51', 'D21S11', 'FGA',
-            'TH01', 'TPOX', 'vWA', 'D1S1656', 'D2S441',
-            'D2S1338', 'D10S1248', 'D12S391', 'D19S433', 'D22S1045'
+            'CSF1PO','D3S1358','D5S818','D7S820','D8S1179',
+            'D13S317','D16S539','D18S51','D21S11','FGA',
+            'TH01','TPOX','vWA','D1S1656','D2S441',
+            'D2S1338','D10S1248','D12S391','D19S433','D22S1045'
         ];
 
-        // Generate loci input fields
+        // Flag helper
+        function getFlag(country) {
+            const codes = {
+                'India':'in','USA':'us','United States':'us',
+                'UK':'gb','United Kingdom':'gb','Japan':'jp','China':'cn',
+                'Australia':'au','Canada':'ca','Europe':'eu'
+            };
+            const c = codes[country];
+            return c ? `<img src="https://flagcdn.com/16x12/${c}.png" width="16" height="12" style="border-radius:2px;vertical-align:middle;margin-right:4px;">` : '🌍 ';
+        }
+
         function generateLociInputs() {
             const container = document.getElementById('loci-inputs');
             CODIS_LOCI.forEach(locus => {
                 const div = document.createElement('div');
-                div.className = 'locus-input';
-                div.innerHTML = `
-                    <label>${locus}</label>
-                    <input type="text" placeholder="e.g., 14,16" data-locus="${locus}">
-                `;
+                div.className = 'locus-wrap';
+                div.innerHTML = `<span class="locus-label">${locus}</span>
+                    <input type="text" placeholder="e.g. 14,16" data-locus="${locus}">`;
                 container.appendChild(div);
             });
         }
 
-        // Load sample data for testing
         function loadSampleData() {
-            const inputs = document.querySelectorAll('.locus-input input');
             const samples = {
-                'CSF1PO': '10,12', 'D3S1358': '14,16', 'D5S818': '11,12',
-                'D7S820': '8,10', 'D8S1179': '13,15', 'D13S317': '10,12',
-                'D16S539': '11,13', 'D18S51': '15,17', 'D21S11': '29,31',
-                'FGA': '21,23', 'TH01': '6,8', 'TPOX': '8,10',
-                'vWA': '16,18', 'D1S1656': '14,16', 'D2S441': '11,13',
-                'D2S1338': '18,20', 'D10S1248': '12,14', 'D12S391': '19,21',
-                'D19S433': '12,14', 'D22S1045': '11,13'
+                'CSF1PO':'10,12','D3S1358':'14,16','D5S818':'11,12','D7S820':'8,10',
+                'D8S1179':'13,15','D13S317':'10,12','D16S539':'11,13','D18S51':'15,17',
+                'D21S11':'29,31','FGA':'21,23','TH01':'6,8','TPOX':'8,10',
+                'vWA':'16,18','D1S1656':'14,16','D2S441':'11,13','D2S1338':'18,20',
+                'D10S1248':'12,14','D12S391':'19,21','D19S433':'12,14','D22S1045':'11,13'
             };
-
-            inputs.forEach(input => {
-                const locus = input.dataset.locus;
-                input.value = samples[locus] || '';
+            document.querySelectorAll('.locus-wrap input').forEach(input => {
+                input.value = samples[input.dataset.locus] || '';
             });
-
-            showMessage('✓ Sample data loaded', 'success');
+            showMsg('Sample data loaded — ready to match!', 'success');
         }
 
-        // Parse alleles from input
-        function parseAlleles(input) {
-            return input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
-        }
-
-        // Get crime scene DNA from form
-        function getCrimeSampleFromForm() {
+        function getCrimeSample() {
             const markers = {};
-            document.querySelectorAll('.locus-input input').forEach(input => {
-                const locus = input.dataset.locus;
-                const alleles = parseAlleles(input.value);
-                if (alleles.length === 2) {
-                    markers[locus] = alleles;
-                }
+            document.querySelectorAll('.locus-wrap input').forEach(input => {
+                const alleles = input.value.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+                if (alleles.length === 2) markers[input.dataset.locus] = alleles;
             });
-
             return {
-                id: document.getElementById('sample-id').value || 'CRIME_' + new Date().getTime(),
-                markers: markers
+                id: document.getElementById('sample-id').value || 'CRIME_' + Date.now(),
+                markers
             };
         }
 
-        // Match crime scene DNA
         async function matchCrimeScene() {
+            clearMsgs();
+            let crimeSample;
+            const jsonPaste = document.getElementById('json-paste').value.trim();
             try {
-                clearMessages();
-                
-                let crimeSample;
-                const jsonPaste = document.getElementById('json-paste').value.trim();
-                
-                if (jsonPaste) {
-                    crimeSample = JSON.parse(jsonPaste);
-                } else {
-                    crimeSample = getCrimeSampleFromForm();
-                }
-
-                if (!crimeSample.markers || Object.keys(crimeSample.markers).length < 5) {
-                    showMessage('❌ Please enter at least 5 loci with alleles', 'error');
-                    return;
-                }
-
-                // Show loading
-                document.getElementById('loading').classList.add('show');
-                document.getElementById('results-section').classList.remove('show');
-
-                // Send to backend
-                const response = await fetch('/api/crime-scene-match', {
+                crimeSample = jsonPaste ? JSON.parse(jsonPaste) : getCrimeSample();
+            } catch(e) {
+                showMsg('Invalid JSON format: ' + e.message, 'error'); return;
+            }
+            if (!crimeSample.markers || Object.keys(crimeSample.markers).length < 5) {
+                showMsg('Please enter at least 5 loci with allele pairs', 'error'); return;
+            }
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results-section').classList.remove('show');
+            try {
+                const res = await fetch('/api/crime-scene-match', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(crimeSample)
                 });
-
-                const data = await response.json();
-
-                // Hide loading
-                document.getElementById('loading').classList.remove('show');
-
-                if (data.success) {
-                    displayResults(data, crimeSample);
-                    showMessage('✓ Matching complete!', 'success');
-                } else {
-                    showMessage('❌ ' + data.error, 'error');
-                }
-
-            } catch (error) {
-                document.getElementById('loading').classList.remove('show');
-                showMessage('❌ Error: ' + error.message, 'error');
+                const data = await res.json();
+                document.getElementById('loading').style.display = 'none';
+                if (data.success) { displayResults(data, crimeSample); showMsg('Matching complete!', 'success'); }
+                else showMsg(data.error, 'error');
+            } catch(e) {
+                document.getElementById('loading').style.display = 'none';
+                showMsg('Error: ' + e.message, 'error');
             }
         }
 
-        // Display results
-        function displayResults(data, crimeSample) {
-            document.getElementById('result-sample-id').textContent = crimeSample.id;
+        function displayResults(data, sample) {
+            document.getElementById('result-sample-id').textContent = sample.id;
             document.getElementById('result-total-profiles').textContent = data.total_profiles_searched;
             document.getElementById('result-timestamp').textContent = new Date().toLocaleString();
-
             document.getElementById('definite-count').textContent = data.definite_matches;
             document.getElementById('probable-count').textContent = data.probable_matches;
             document.getElementById('possible-count').textContent = data.possible_matches || 0;
 
-            const matchesContainer = document.getElementById('matches-container');
-            matchesContainer.innerHTML = '';
+            const container = document.getElementById('matches-container');
+            container.innerHTML = '';
 
-            data.top_10_suspects.forEach((match, index) => {
-                const statusClass = match.status === 'DEFINITE MATCH' ? 'definite' :
-                                  match.status === 'PROBABLE MATCH' ? 'probable' : 'possible';
-
-                const statusBadgeClass = match.status === 'DEFINITE MATCH' ? 'status-definite' :
-                                       match.status === 'PROBABLE MATCH' ? 'status-probable' : 'status-possible';
-
-                const card = document.createElement('div');
-                card.className = `match-card ${statusClass}`;
-                card.innerHTML = `
-                    <div style="display: flex; align-items: flex-start;">
-                        <div class="match-rank">${index + 1}</div>
-                        <div style="flex: 1;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                <div>
-                                    <h3 style="color: #333; margin-bottom: 5px;">${match.suspect_name}</h3>
-                                    <p style="color: #666; font-size: 0.9em;">ID: ${match.suspect_id}</p>
-                                </div>
-                                <span class="status-badge ${statusBadgeClass}">${match.status}</span>
-                            </div>
-
-                            <div class="match-info">
-                                <div class="match-info-item">
-                                    <label>Similarity Score:</label>
-                                    <value><strong>${match.similarity_percentage}</strong></value>
-                                </div>
-                                <div class="match-info-item">
-                                    <label>Confidence:</label>
-                                    <value><strong>${match.confidence}</strong></value>
-                                </div>
-                                <div class="match-info-item">
-                                    <label>Arrest Date:</label>
-                                    <value>${match.arrest_date}</value>
-                                </div>
-                                <div class="match-info-item">
-                                    <label>Region:</label>
-                                    <value>${match.region}</value>
+            if (!data.top_10_suspects || data.top_10_suspects.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);"><i class="fas fa-search" style="font-size:2em;display:block;margin-bottom:12px;opacity:0.4;"></i>No matches found above threshold</div>';
+            } else {
+                data.top_10_suspects.forEach((match, i) => {
+                    const sc = match.similarity_score * 100;
+                    const cls = match.status === 'DEFINITE MATCH' ? 'definite' : match.status === 'PROBABLE MATCH' ? 'probable' : 'possible';
+                    const valCls = cls === 'definite' ? 'green' : cls === 'probable' ? 'blue' : 'amber';
+                    const div = document.createElement('div');
+                    div.className = `mc ${cls}`;
+                    div.style.animationDelay = `${i * 0.06}s`;
+                    div.innerHTML = `
+                        <div class="mc-top">
+                            <div class="mc-left">
+                                <div class="mc-rank">${i + 1}</div>
+                                <div style="min-width:0;overflow:hidden;">
+                                    <div class="mc-name">${match.suspect_name || match.suspect_id}</div>
+                                    <div class="mc-id">${match.suspect_id}</div>
                                 </div>
                             </div>
-
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: ${match.similarity_score * 100}%;">
-                                    ${Math.round(match.similarity_score * 100)}%
-                                </div>
-                            </div>
+                            <div class="mc-score ${cls}">${sc.toFixed(2)}%</div>
                         </div>
-                    </div>
-                `;
-                matchesContainer.appendChild(card);
-            });
-
+                        <div class="mc-details">
+                            <div class="mc-field">
+                                <div class="mc-fl"><i class="fas fa-shield-alt"></i> Status</div>
+                                <div class="mc-fv ${valCls}">${match.status}</div>
+                            </div>
+                            <div class="mc-field">
+                                <div class="mc-fl"><i class="fas fa-percent"></i> Confidence</div>
+                                <div class="mc-fv ${valCls}">${match.confidence || match.similarity_percentage}</div>
+                            </div>
+                            <div class="mc-field">
+                                <div class="mc-fl"><i class="fas fa-flag"></i> Region</div>
+                                <div class="mc-fv blue">${getFlag(match.region)}${match.region || 'N/A'}</div>
+                            </div>
+                            <div class="mc-field">
+                                <div class="mc-fl"><i class="fas fa-chart-bar"></i> Score</div>
+                                <div class="mc-fv ${valCls}">${sc.toFixed(2)}%</div>
+                                <div class="bar-wrap"><div class="bar-fill" style="width:${sc}%"></div></div>
+                            </div>
+                        </div>`;
+                    container.appendChild(div);
+                });
+            }
             document.getElementById('results-section').classList.add('show');
         }
 
-        // Utility functions
-        function showMessage(msg, type) {
-            const element = document.getElementById(`${type}-message`);
-            element.textContent = msg;
-            element.classList.add('show');
-            setTimeout(() => element.classList.remove('show'), 5000);
+        function showMsg(msg, type) {
+            const el = document.getElementById(type === 'error' ? 'error-message' : 'success-message');
+            const txt = document.getElementById(type === 'error' ? 'error-text' : 'success-text');
+            txt.textContent = msg; el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
         }
-
-        function clearMessages() {
+        function clearMsgs() {
             document.getElementById('error-message').classList.remove('show');
             document.getElementById('success-message').classList.remove('show');
         }
 
-        function downloadResults() {
-            showMessage('📥 PDF export feature coming soon!', 'success');
-        }
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('click', function () {
+            fetch('/toggle-theme').then(r => r.json()).then(data => {
+                document.body.classList.toggle('light-mode', data.theme === 'light');
+                this.innerHTML = data.theme === 'light' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            });
+        });
 
-        // Initialize
         window.addEventListener('load', generateLociInputs);
     </script>
 </body>

@@ -852,7 +852,7 @@
         .settings-dropdown {
             position: fixed;
             top: 25px;
-            left: 90px;
+            left: 25px;
             z-index: 1000;
         }
 
@@ -883,83 +883,108 @@
         .settings-menu {
             display: none;
             position: absolute;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(30, 58, 138, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(14, 165, 233, 0.5);
-            border-radius: 12px;
-            padding: 8px 0;
-            min-width: 160px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            animation: slideDown 0.3s ease-out;
+            top: 56px;
+            left: 0;
+            transform: none;
+            width: 240px;
+            background: #0d1526;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(14,165,233,0.08) inset;
+            animation: smSlideIn 0.18s cubic-bezier(0.2,0,0,1);
+            z-index: 1001;
         }
+        .settings-menu.active { display: block; }
 
-        .settings-menu.active {
-            display: block;
+        @keyframes smSlideIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)    scale(1);    }
         }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
-            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
         @media (max-width: 768px) {
-            .settings-menu {
-                left: 0;
-                transform: none;
-                animation: slideDownMobile 0.2s ease-out;
+            .settings-menu { left: 0 !important; transform: none !important; width: 210px; }
+            @keyframes smSlideIn {
+                from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+                to   { opacity: 1; transform: translateY(0)    scale(1);    }
             }
-            @keyframes slideDownMobile {
-                from { opacity: 0; transform: translateY(-6px); }
-                to   { opacity: 1; transform: translateY(0); }
-            }
+        }
+
+        /* ── User header ── */
+        .settings-menu-header {
+            display: flex; align-items: center; gap: 11px;
+            padding: 14px 14px 12px;
+            background: linear-gradient(135deg, rgba(14,165,233,0.08), rgba(99,102,241,0.06));
+            border-bottom: 1px solid rgba(255,255,255,0.055);
+        }
+        .smh-avatar {
+            width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+            background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.95em; color: white;
+            box-shadow: 0 2px 8px rgba(14,165,233,0.35);
+        }
+        .smh-name {
+            font-size: 0.85em; font-weight: 700;
+            color: #f1f5f9; letter-spacing: 0.1px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .smh-role {
+            font-size: 0.63em; font-weight: 500;
+            color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;
+        }
+
+        /* ── Items ── */
+        .sm-group { padding: 6px; }
+        .sm-group + .sm-group {
+            border-top: 1px solid rgba(255,255,255,0.055);
+            padding-top: 6px;
         }
 
         .settings-menu-item {
-            padding: 12px 20px;
-            color: #e2e8f0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 10px;
+            border-radius: 9px;
+            color: #94a3b8;
+            font-size: 0.83em; font-weight: 600;
+            text-decoration: none; cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+            white-space: nowrap;
         }
-
         .settings-menu-item:hover {
-            background: rgba(14, 165, 233, 0.4);
-            padding-left: 24px;
-            color: #0ea5e9;
+            background: rgba(14,165,233,0.1);
+            color: #e2e8f0;
+        }
+        .settings-menu-item:hover .smi-icon { color: #38bdf8; }
+
+        .settings-menu-item.danger { color: #94a3b8; }
+        .settings-menu-item.danger:hover { background: rgba(239,68,68,0.1); color: #fca5a5; }
+        .settings-menu-item.danger:hover .smi-icon { color: #f87171; }
+
+        .smi-icon {
+            width: 16px; text-align: center; flex-shrink: 0;
+            color: #475569; font-size: 0.88em;
+            transition: color 0.15s ease;
         }
 
-        .settings-menu-item i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .settings-menu-item:first-child {
-            border-radius: 12px 12px 0 0;
-        }
-
-        .settings-menu-item:last-child {
-            border-radius: 0 0 12px 12px;
-        }
-
+        /* light mode */
         body.light-mode .settings-menu {
-            background: rgba(248, 250, 252, 0.95);
-            border: 1px solid rgba(14, 165, 233, 0.3);
+            background: #ffffff;
+            border-color: rgba(0,0,0,0.08);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
         }
-
-        body.light-mode .settings-menu-item {
-            color: #1e293b;
+        body.light-mode .settings-menu-header {
+            background: linear-gradient(135deg,rgba(14,165,233,0.06),rgba(99,102,241,0.04));
+            border-bottom-color: rgba(0,0,0,0.06);
         }
-
-        body.light-mode .settings-menu-item:hover {
-            background: rgba(14, 165, 233, 0.15);
-            color: #0ea5e9;
-        }
+        body.light-mode .smh-name { color: #0f172a; }
+        body.light-mode .smh-avatar { background: linear-gradient(135deg,#2563eb,#0ea5e9); }
+        body.light-mode .sm-group + .sm-group { border-top-color: rgba(0,0,0,0.06); }
+        body.light-mode .settings-menu-item { color: #64748b; }
+        body.light-mode .settings-menu-item:hover { background: rgba(14,165,233,0.07); color: #0f172a; }
+        body.light-mode .settings-menu-item:hover .smi-icon { color: #0284c7; }
+        body.light-mode .smi-icon { color: #94a3b8; }
+        body.light-mode .settings-menu-item.danger:hover { background: rgba(239,68,68,0.07); color: #dc2626; }
+        body.light-mode .settings-menu-item.danger:hover .smi-icon { color: #dc2626; }
         </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
@@ -974,14 +999,38 @@
             <i class="fas fa-cog"></i>
         </button>
         <div class="settings-menu" id="settingsMenu">
-            <a href="/profile" class="settings-menu-item">
-                <i class="fas fa-user-circle"></i>
-                <span>My Profile</span>
-            </a>
-            <a href="/logout" class="settings-menu-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </a>
+            <div class="settings-menu-header">
+                <div class="smh-avatar"><i class="fas fa-user"></i></div>
+                <div style="min-width:0;">
+                    <div class="smh-name" id="menuUsername">Account</div>
+                    <div class="smh-role">Forensic Analyst</div>
+                </div>
+            </div>
+
+            <div class="sm-group">
+                <a href="/profile" class="settings-menu-item">
+                    <i class="fas fa-user-circle smi-icon"></i>
+                    My Profile
+                </a>
+            </div>
+
+            <div class="sm-group">
+                <a href="/crime-scene" class="settings-menu-item">
+                    <i class="fas fa-search smi-icon"></i>
+                    Crime Scene Match
+                </a>
+                <div class="settings-menu-item" onclick="openDbModal()">
+                    <i class="fas fa-database smi-icon"></i>
+                    Database Admin
+                </div>
+            </div>
+
+            <div class="sm-group">
+                <a href="/logout" class="settings-menu-item danger">
+                    <i class="fas fa-sign-out-alt smi-icon"></i>
+                    Logout
+                </a>
+            </div>
         </div>
     </div>
 
@@ -1104,66 +1153,54 @@
             </div>
         </div>
 
-        <!-- ===== DATABASE MANAGEMENT SECTION (NEW - CORRECTED) ===== -->
-        <div style="margin-top: 40px; padding: clamp(20px, 4vw, 50px); background: rgba(220, 38, 38, 0.15); border: 2px solid rgba(220, 38, 38, 0.4); border-radius: 20px; animation: slideUpIn 0.8s ease-out;">
-            <h2 class="section-title" style="margin-bottom: 40px; color: #ff6b6b;">
-                🗄️ DATABASE MANAGEMENT (NEW)
-            </h2>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 30px;">
-                
-                <!-- Database Stats Card -->
-                <div style="background: rgba(30, 58, 138, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(14, 165, 233, 0.3); padding: 35px; border-radius: 15px; text-align: center;">
-                    <div style="font-size: 2.5em; margin-bottom: 15px;">📊</div>
-                    <h3 style="color: #cbd5e1; margin-bottom: 10px;">Database Status</h3>
-                    <p style="color: #cbd5e1; margin: 8px 0;">
-                        Total Profiles: <strong id="db-profile-count" style="color: #60a5fa;">Loading...</strong>
-                    </p>
-                    <p style="color: #cbd5e1; margin: 8px 0;">
-                        File: <strong style="color: #10b981;">profiles_database.json</strong>
-                    </p>
-                    <p style="color: #cbd5e1; margin: 8px 0;">
-                        Size: <strong id="db-file-size" style="color: #a78bfa;">Loading...</strong>
-                    </p>
-                    <button onclick="refreshDatabaseStats()" style="margin-top: 15px; padding: 10px 20px; background: #4ecdc4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;" onmouseover="this.style.background='#3bb8ad'" onmouseout="this.style.background='#4ecdc4'">
-                        🔄 Refresh Stats
-                    </button>
-                </div>
-                
-                <!-- Crime Scene Matching Card -->
-                <div style="background: rgba(220, 38, 38, 0.2); backdrop-filter: blur(20px); border: 2px solid rgba(220, 38, 38, 0.4); padding: 35px; border-radius: 15px; text-align: center;">
-                    <div style="font-size: 2.5em; margin-bottom: 15px;">🚨</div>
-                    <h3 style="color: #ff6b6b; margin-bottom: 10px;">CRIME SCENE MATCHING</h3>
-                    <p style="color: #cbd5e1; margin-bottom: 15px; font-size: 0.95em;">
-                        Match crime scene DNA against all profiles in database
-                    </p>
-                    <a href="/crime-scene" style="display: inline-block; padding: 12px 25px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(239, 68, 68, 0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(239, 68, 68, 0.3)'">
-                        Go to Crime Matching →
-                    </a>
-                </div>
+    </div>
 
-                <!-- Import/Export Card -->
-                <div style="background: rgba(30, 58, 138, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(14, 165, 233, 0.3); padding: 35px; border-radius: 15px; text-align: center;">
-                    <div style="font-size: 2.5em; margin-bottom: 15px;">⚙️</div>
-                    <h3 style="color: #cbd5e1; margin-bottom: 10px;">Database Operations</h3>
-                    <p style="color: #cbd5e1; margin-bottom: 15px; font-size: 0.95em;">
-                        Import/Export your database
-                    </p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button onclick="exportDatabase()" style="padding: 10px 15px; background: #95e1d3; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;" onmouseover="this.style.background='#7dd3c0'" onmouseout="this.style.background='#95e1d3'">
-                            📥 Export
-                        </button>
-                        <button onclick="document.getElementById('import-file').click()" style="padding: 10px 15px; background: #f38181; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;" onmouseover="this.style.background='#e86868'" onmouseout="this.style.background='#f38181'">
-                            📤 Import
-                        </button>
-                    </div>
-                    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="importDatabase(event)">
+    <!-- ===== DATABASE ADMIN MODAL ===== -->
+    <div id="dbModal" style="display:none; position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+        <div style="background:linear-gradient(135deg,#0f1729,#0f172a); border:1px solid rgba(14,165,233,0.3); border-radius:22px; padding:36px 32px; max-width:520px; width:90%; box-shadow:0 30px 80px rgba(0,0,0,0.6); position:relative; animation:dbModalIn 0.3s ease-out;">
+            <button onclick="closeDbModal()" style="position:absolute;top:16px;right:18px;background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.25);color:#94a3b8;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1em;transition:all 0.2s ease-out;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(14,165,233,0.1)'">&#10005;</button>
+
+            <div style="font-size:0.7em;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#64748b;margin-bottom:14px;">&#9881;&#65039; Admin Panel</div>
+            <h2 style="font-size:1.4em;font-weight:800;color:#e2e8f0;margin-bottom:24px;">Database Management</h2>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
+                <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-family:monospace;font-size:1.6em;font-weight:700;color:#60a5fa;" id="db-profile-count">&#8212;</div>
+                    <div style="font-size:0.65em;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-top:4px;">Profiles</div>
+                </div>
+                <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-family:monospace;font-size:1.6em;font-weight:700;color:#34d399;" id="db-file-size">&#8212;</div>
+                    <div style="font-size:0.65em;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-top:4px;">File Size</div>
+                </div>
+                <div style="background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.2);border-radius:12px;padding:16px;text-align:center;">
+                    <div style="font-family:monospace;font-size:1.6em;font-weight:700;color:#c084fc;">JSON</div>
+                    <div style="font-size:0.65em;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-top:4px;">Format</div>
                 </div>
             </div>
-        </div>
-        <!-- ===== END DATABASE MANAGEMENT SECTION ===== -->
 
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                <button onclick="refreshDatabaseStats()" style="padding:13px;background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);border-radius:12px;color:#7dd3fc;font-weight:700;cursor:pointer;transition:all 0.25s ease-out;font-size:0.88em;" onmouseover="this.style.background='rgba(14,165,233,0.2)'" onmouseout="this.style.background='rgba(14,165,233,0.1)'">
+                    &#128260; Refresh Stats
+                </button>
+                <button onclick="exportDatabase()" style="padding:13px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:12px;color:#6ee7b7;font-weight:700;cursor:pointer;transition:all 0.25s ease-out;font-size:0.88em;" onmouseover="this.style.background='rgba(16,185,129,0.2)'" onmouseout="this.style.background='rgba(16,185,129,0.1)'">
+                    &#128229; Export DB
+                </button>
+            </div>
+            <div style="margin-bottom:20px;">
+                <button onclick="document.getElementById('import-file').click()" style="width:100%;padding:13px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:12px;color:#fcd34d;font-weight:700;cursor:pointer;transition:all 0.25s ease-out;font-size:0.88em;" onmouseover="this.style.background='rgba(245,158,11,0.2)'" onmouseout="this.style.background='rgba(245,158,11,0.1)'">
+                    &#128228; Import Database (replaces current)
+                </button>
+            </div>
+            <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importDatabase(event)">
+
+            <a href="/crime-scene" style="display:flex;align-items:center;gap:10px;padding:14px 18px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#fca5a5;text-decoration:none;font-weight:700;font-size:0.88em;transition:all 0.25s ease-out;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+                &#128680; <span>Go to Crime Scene Matching &#8594;</span>
+            </a>
+        </div>
     </div>
+    <style>
+        @keyframes dbModalIn { from { opacity:0; transform:scale(0.93) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    </style>
 
     <script>
         const themeToggle = document.getElementById('themeToggle');
@@ -1175,6 +1212,7 @@
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('userDisplay').textContent = `👤 ${data.user.username}`;
+                    document.getElementById('menuUsername').textContent = data.user.username;
                 }
             } catch (error) {
                 console.log('Error loading user info:', error);
@@ -1321,6 +1359,20 @@
     <script>
     // ===== DATABASE MANAGEMENT FUNCTIONS (NEW - CORRECTED) =====
 
+    function openDbModal() {
+        const modal = document.getElementById('dbModal');
+        modal.style.display = 'flex';
+        document.getElementById('settingsMenu').classList.remove('active');
+        refreshDatabaseStats();
+    }
+    function closeDbModal() {
+        document.getElementById('dbModal').style.display = 'none';
+    }
+    // Close modal on backdrop click
+    document.getElementById('dbModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDbModal();
+    });
+
     async function refreshDatabaseStats() {
         try {
             const response = await fetch('/api/database-stats');
@@ -1381,11 +1433,6 @@
             alert('❌ Error importing: ' + error);
         }
     }
-
-    window.addEventListener('load', function() {
-        refreshDatabaseStats();
-        setInterval(refreshDatabaseStats, 10000);
-    });
 
     // ===== END DATABASE MANAGEMENT FUNCTIONS =====
     </script>
