@@ -451,11 +451,27 @@ def logout():
 
 
 @app.route('/profile')
-def profile_redirect():
-    # Placeholder route to avoid 404 from navbar profile link
+def profile_page():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return redirect(url_for('index'))
+    theme = session.get('theme', 'dark')
+    # Find user data
+    user = next((u for u in DATABASE['users'] if u['id'] == session['user_id']), None)
+    if not user:
+        return redirect(url_for('index'))
+    # Count this user's activity
+    total_profiles = len(DATABASE['profiles'])
+    total_matches  = len(DATABASE['match_results'])
+    joined_date    = user.get('created_at', '')[:10] if user.get('created_at') else 'N/A'
+    return render_template('profile.html',
+        theme=theme,
+        username=user['username'],
+        email=user['email'],
+        joined_date=joined_date,
+        total_profiles=total_profiles,
+        total_matches=total_matches,
+        user_id=user['id']
+    )
 
 
 @app.route('/crime-scene')
