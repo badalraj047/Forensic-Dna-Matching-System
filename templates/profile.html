@@ -175,11 +175,57 @@
         body.light-mode .info-card, body.light-mode .sec-tile { background: rgba(255,255,255,0.92); }
         body.light-mode .topbar { background: rgba(255,255,255,0.96); }
         body.light-mode .qs-row { background: rgba(14,165,233,0.04); }
+
         @media (max-width: 768px) {
-            .page { grid-template-columns: 1fr; }
-            .left-panel { border-right: none; border-bottom: 1px solid var(--border); }
+            .page { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; }
+            .topbar { padding: 12px 14px; grid-column: 1; }
+            .back-btn { font-size: 0.8em; padding: 6px 11px; }
+            .topbar-title { font-size: 0.68em; letter-spacing: 0.5px; }
+
+            .left-panel {
+                grid-column: 1;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 24px 18px;
+                gap: 16px;
+                /* Side-by-side layout on mobile */
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .avatar-scene { width: 90px; height: 90px; flex-shrink: 0; }
+            .avatar-core { font-size: 1.8em; }
+            .profile-name-block { flex: 1; min-width: 0; text-align: left; }
+            .profile-name { font-size: 1.2em; text-align: left; }
+            .uid-badge { font-size: 0.7em; justify-content: flex-start; }
+            .role-badge { font-size: 0.72em; padding: 5px 10px; }
+            .qs-list { width: 100%; }
+            .qs-row { padding: 9px 12px; }
+            .qs-label, .qs-val { font-size: 0.74em; }
+            .signout-btn { width: 100%; font-size: 0.88em; padding: 11px; }
+
+            .right-panel { padding: 20px 14px; gap: 16px; }
+            .info-card { padding: 18px 14px; border-radius: 14px; }
+            .info-card-title { font-size: 0.78em; }
+            .info-field { padding: 11px 13px; gap: 10px; }
+            .field-icon { width: 30px; height: 30px; font-size: 0.78em; flex-shrink: 0; }
+            .field-label { font-size: 0.68em; }
+            .field-value { font-size: 0.85em; }
+
+            .security-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .sec-tile { padding: 14px 12px; border-radius: 12px; }
+            .sec-tile-icon { font-size: 1.5em; margin-bottom: 8px; }
+            .sec-tile-title { font-size: 0.78em; }
+            .sec-tile-sub { font-size: 0.68em; line-height: 1.4; }
+        }
+
+        @media (max-width: 420px) {
+            .left-panel { flex-direction: column; text-align: center; }
+            .profile-name-block { text-align: center; }
+            .profile-name { text-align: center; font-size: 1.1em; }
+            .uid-badge { justify-content: center; }
             .security-grid { grid-template-columns: 1fr; }
-            .topbar, .right-panel { padding: 16px 20px; }
         }
     </style>
 </head>

@@ -427,7 +427,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
             gap: 40px;
             margin-bottom: 70px;
         }
@@ -563,7 +563,7 @@
 
         .actions-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
             gap: 40px;
             margin-bottom: 70px;
         }
@@ -740,7 +740,7 @@
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
             gap: 30px;
             margin-top: 30px;
         }
@@ -816,12 +816,56 @@
         }
 
         @media (max-width: 768px) {
-            .container { padding: 20px 15px; }
-            .header { padding: 40px 25px; }
-            .header h1 { font-size: 2.5em; }
-            .section-title { font-size: 2em; }
-            .stats-grid, .actions-grid { gap: 20px; }
-            .stat-card, .action-card { padding: 30px 20px; }
+            body { padding: 0; }
+            .container { padding: 12px 14px; }
+
+            /* Header */
+            .header { padding: 28px 16px; margin-bottom: 28px; border-radius: 18px; }
+            .header h1 { font-size: 2em; letter-spacing: -1px; margin: 14px 0 10px; }
+            .header p, .tagline { font-size: 0.92em; }
+            .logo-badge { font-size: 0.72em; padding: 8px 14px; letter-spacing: 1px; }
+            .security-badges { gap: 8px; flex-wrap: wrap; justify-content: center; }
+            .badge { font-size: 0.76em; padding: 7px 12px; }
+
+            /* Stats */
+            .section-title { font-size: 1.5em; margin-bottom: 20px; }
+            .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 12px; margin-bottom: 28px; }
+            .stat-card { padding: 20px 14px; border-radius: 14px; }
+            .stat-icon { font-size: 2em; margin-bottom: 10px; }
+            .stat-number { font-size: 2.2em; }
+            .stat-label { font-size: 0.82em; }
+
+            /* Action Cards */
+            .actions-grid { grid-template-columns: 1fr 1fr !important; gap: 12px; margin-bottom: 28px; }
+            .action-card { padding: 20px 12px; border-radius: 14px; }
+            .action-icon { font-size: 2em; margin-bottom: 10px; }
+            .action-card h3 { font-size: 1em; margin-bottom: 6px; }
+            .action-card p { font-size: 0.78em; margin-bottom: 12px; line-height: 1.4; }
+            .btn { padding: 10px 14px; font-size: 0.8em; }
+
+            /* Features */
+            .features-section { padding: 22px 14px; border-radius: 14px; }
+            .features-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+
+            /* Floating buttons — row at top */
+            .settings-dropdown { top: 14px; left: 14px; }
+            .settings-btn { width: 38px; height: 38px; font-size: 0.9em; }
+            .theme-toggle { top: 14px; right: 60px; width: 38px; height: 38px; font-size: 0.9em; padding: 0; }
+            .notification-container { top: 14px; right: 14px; }
+            .notification-button { width: 38px; height: 38px; }
+            #notificationPanel { width: calc(100vw - 28px); right: 0; left: 0; margin: 0 auto; top: 60px; }
+            #notificationCount { width: 18px; height: 18px; font-size: 0.6rem; top: -4px; right: -4px; }
+
+            /* DB section inline styles override */
+            .container section, .container > div { max-width: 100% !important; }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.65em; }
+            .actions-grid { grid-template-columns: 1fr !important; }
+            .stats-grid { grid-template-columns: 1fr 1fr !important; }
+            .features-grid { grid-template-columns: 1fr !important; }
+            .action-card p { display: none; }
         }
             /* Settings Dropdown Styles */
         .settings-dropdown {
@@ -1074,12 +1118,12 @@
         </div>
 
         <!-- ===== DATABASE MANAGEMENT SECTION (NEW - CORRECTED) ===== -->
-        <div style="margin-top: 70px; padding: 60px 50px; background: rgba(220, 38, 38, 0.15); border: 2px solid rgba(220, 38, 38, 0.4); border-radius: 20px; animation: slideUpIn 0.8s ease-out;">
+        <div style="margin-top: 40px; padding: clamp(20px, 4vw, 50px); background: rgba(220, 38, 38, 0.15); border: 2px solid rgba(220, 38, 38, 0.4); border-radius: 20px; animation: slideUpIn 0.8s ease-out;">
             <h2 class="section-title" style="margin-bottom: 40px; color: #ff6b6b;">
                 🗄️ DATABASE MANAGEMENT (NEW)
             </h2>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 30px;">
                 
                 <!-- Database Stats Card -->
                 <div style="background: rgba(30, 58, 138, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(14, 165, 233, 0.3); padding: 35px; border-radius: 15px; text-align: center;">

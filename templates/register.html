@@ -569,18 +569,21 @@
         }
 
         @media (max-width: 768px) {
-            .register-card {
-                padding: 24px 20px;
-                border-radius: 16px;
-            }
+            body { padding: 16px; }
+            .center-container { padding: 8px; max-width: 100%; }
+            .register-card { padding: 24px 18px; border-radius: 16px; }
+            .register-header h1 { font-size: 1.55em; }
+            .register-header p { font-size: 0.83em; }
+            .form-group { margin-bottom: 13px; }
+            .form-group label { font-size: 0.85em; }
+            .form-group input { padding: 11px 13px; font-size: 0.93em; }
+            .register-btn { padding: 13px; font-size: 0.95em; }
+            .register-footer { font-size: 0.82em; margin-top: 16px; }
+        }
 
-            .register-header h1 {
-                font-size: 1.6em;
-            }
-
-            .center-container {
-                max-width: 95%;
-            }
+        @media (max-width: 380px) {
+            .register-card { padding: 20px 13px; }
+            .register-header h1 { font-size: 1.35em; }
         }
     </style>
 </head>

@@ -166,6 +166,16 @@
             border-left-color: #10b981;
             color: #6ee7b7;
         }
+
+        @media (max-width: 768px) {
+            body { padding: 16px 12px; }
+            .theme-toggle { top: 14px; right: 14px; padding: 10px 13px; font-size: 1em; }
+            .nav { padding: 12px 16px; margin-bottom: 18px; }
+            .card { padding: 24px 18px; border-radius: 16px; }
+            h1 { font-size: 1.8em; }
+            .btn { padding: 14px 20px; font-size: 1em; }
+            textarea { font-size: 0.9em; }
+        }
     </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>

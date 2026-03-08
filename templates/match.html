@@ -836,6 +836,63 @@
             transition: all 0.3s ease;
         }
         .verdict-btn:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(14,165,233,0.55); }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            body { padding: 10px 12px; }
+            .theme-toggle { top: 12px; right: 12px; padding: 9px 11px; font-size: 0.95em; }
+            .nav { padding: 11px 14px; margin-bottom: 14px; border-radius: 12px; }
+            .nav a { font-size: 0.88em; }
+
+            .card { padding: 20px 16px; border-radius: 16px; }
+            h1 { font-size: 1.6em; letter-spacing: -0.5px; }
+            .subtitle { font-size: 0.9em; }
+
+            /* Form */
+            select, input[type="range"] { font-size: 0.92em; padding: 10px 12px; }
+            label { font-size: 0.88em; }
+            .btn { padding: 13px 18px; font-size: 0.92em; width: 100%; }
+
+            /* Result cards — no overlap */
+            .rc-header { padding: 12px 13px 10px; gap: 8px; flex-wrap: nowrap; }
+            .rc-name { font-size: 0.88em; }
+            .rc-id { font-size: 0.65em; }
+            .rc-score { padding: 4px 10px; font-size: 0.82em; white-space: nowrap; }
+            .rc-details { grid-template-columns: 1fr 1fr; }
+            .rc-field { padding: 9px 11px; }
+            .rc-field-label { font-size: 0.62em; letter-spacing: 0.5px; }
+            .rc-field-value { font-size: 0.8em; }
+            .rc-footer { padding: 7px 13px; gap: 6px; }
+            .rc-tag { font-size: 0.65em; padding: 2px 7px; }
+
+            /* Overlay */
+            .overlay-inner { gap: 16px; padding: 0 12px; }
+            .overlay-title { font-size: 1.1em; letter-spacing: 1px; }
+            .overlay-status { font-size: 0.75em; }
+            .dna-helix-wrap { width: 55px; height: 130px; }
+            .dna-glow-ring { width: 80px; height: 80px; }
+            .orbit-particle { width: 80px; height: 80px; }
+            .overlay-progress-wrap { margin: 0 8px; }
+            .loci-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+            .loci-chip { font-size: 0.5em; padding: 4px 2px; }
+            .overlay-counter { font-size: 0.7em; }
+
+            /* Verdict */
+            #overlayVerdict { padding: 28px 16px; }
+            .verdict-icon { font-size: 3em; }
+            .verdict-title { font-size: 1.7em; letter-spacing: 2px; }
+            .verdict-sub { font-size: 0.78em; }
+            .verdict-match-row { padding: 8px 11px; }
+            .verdict-match-id { font-size: 0.72em; }
+            .verdict-match-score { font-size: 0.82em; }
+            .verdict-btn { padding: 10px 24px; font-size: 0.85em; }
+        }
+
+        @media (max-width: 420px) {
+            h1 { font-size: 1.4em; }
+            .rc-details { grid-template-columns: 1fr 1fr; }
+            .rc-name { font-size: 0.82em; }
+        }
     </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>

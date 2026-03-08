@@ -270,6 +270,53 @@
             box-shadow: 0 10px 25px rgba(14,165,233,0.3);
         }
         .empty-state a:hover { transform: translateY(-3px); box-shadow: 0 16px 35px rgba(14,165,233,0.5); }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            body { padding: 10px 12px; }
+            .theme-toggle { top: 12px; right: 12px; padding: 9px 11px; font-size: 0.95em; }
+            .nav { padding: 11px 14px; margin-bottom: 14px; border-radius: 12px; }
+            .nav a { font-size: 0.88em; }
+
+            .page-header { padding: 20px 16px; margin-bottom: 16px; border-radius: 14px; }
+            .page-header h1 { font-size: 1.5em; }
+            .page-header p { font-size: 0.82em; }
+            .summary-chips { gap: 7px; flex-wrap: wrap; }
+            .chip { font-size: 0.73em; padding: 5px 10px; }
+
+            /* Session cards */
+            .session-card { border-radius: 14px; margin-bottom: 12px; }
+            .session-header { padding: 13px 14px; gap: 8px; }
+            .sh-index { width: 30px; height: 30px; font-size: 0.7em; border-radius: 8px; }
+            .sh-left { gap: 10px; }
+            .sh-query { font-size: 0.85em; }
+            .sh-time { font-size: 0.68em; }
+            .sh-threshold { display: none; }
+            .sh-badge { font-size: 0.72em; padding: 3px 9px; }
+            .sh-chevron { font-size: 0.85em; }
+            .session-body-inner { padding: 12px 12px; gap: 10px; }
+
+            /* Profile cards */
+            .profile-card { border-radius: 10px; }
+            .pc-top { padding: 11px 13px; gap: 8px; }
+            .pc-avatar { width: 32px; height: 32px; font-size: 0.82em; }
+            .pc-name { font-size: 0.85em; }
+            .pc-id { font-size: 0.64em; }
+            .pc-score { font-size: 0.8em; padding: 3px 9px; }
+            .pc-expand-hint span { display: none; }
+            .pc-detail-inner { grid-template-columns: 1fr 1fr; }
+            .pc-field { padding: 9px 11px; }
+            .pc-field-lbl { font-size: 0.62em; }
+            .pc-field-val { font-size: 0.8em; }
+            .pc-tags { padding: 7px 12px; gap: 5px; }
+            .pc-tag { font-size: 0.65em; padding: 2px 7px; }
+        }
+
+        @media (max-width: 420px) {
+            .pc-detail-inner { grid-template-columns: 1fr 1fr; }
+            .summary-chips { flex-wrap: wrap; }
+            .page-header h1 { font-size: 1.3em; }
+        }
     </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
