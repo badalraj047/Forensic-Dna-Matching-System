@@ -169,7 +169,7 @@
     </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
-    <div class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></div>
+    <div class="theme-toggle" id="themeToggle"><i class="fas fa-{% if theme == 'light' %}sun{% else %}moon{% endif %}"></i></div>
 
     <div class="container">
         <div class="nav"><a href="/"><i class="fas fa-arrow-left"></i> Back to Dashboard</a></div>
@@ -182,7 +182,14 @@
 
             <form id="uploadForm">
                 <textarea id="profileData" placeholder='{"id": "SAMPLE_001", "region": "USA", "markers": {"D3S1358": [14, 16], "D5S818": [11, 12]}}'></textarea>
+
+                <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-left:4px solid #10b981;padding:12px;border-radius:10px;">
+                    <input type="checkbox" id="storeInDatabase" style="width:18px;height:18px;accent-color:#10b981;">
+                    <label for="storeInDatabase" style="margin:0;color:#cbd5e1;font-weight:600;">Store in main dataset (reference profile)</label>
+                </div>
+
                 <button type="submit" class="btn"><i class="fas fa-shield-alt"></i> Upload & Encrypt</button>
+
             </form>
         </div>
     </div>
@@ -207,11 +214,14 @@
                     throw new Error('Must have "id" and "markers" fields');
                 }
 
+                profile.store_in_database = document.getElementById('storeInDatabase').checked;
+
                 fetch('/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: profileData
+                    body: JSON.stringify(profile)
                 })
+
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {

@@ -368,7 +368,8 @@
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
     <div class="theme-toggle" id="themeToggle">
-        <i class="fas fa-moon"></i>
+        <i class="fas fa-{% if theme == 'light' %}sun{% else %}moon{% endif %}"></i>
+
     </div>
 
     <div class="container">
@@ -395,11 +396,19 @@
                 <div class="form-group">
                     <label><i class="fas fa-dna"></i> Query Profile</label>
                     <select id="query_id" name="query_id" required>
-                        <option>-- Select Profile --</option>
-                        {% for pid in profiles %}
-                        <option value="{{ pid }}">{{ pid }}</option>
-                        {% endfor %}
+                        <option value="">-- Select Profile --</option>
+
+                        {% if last_uploaded_profile_id %}
+                        <option value="__LAST_UPLOADED__">
+                            Last Uploaded Query: {{ last_uploaded_profile_id }} (not in DB)
+                    </option>
+                    {% endif %}
+
+                    {% for pid in profiles %}
+                    <option value="{{ pid }}">{{ pid }}</option>
+                    {% endfor %}
                     </select>
+
                 </div>
 
                 <div class="form-group">

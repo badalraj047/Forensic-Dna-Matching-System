@@ -6,7 +6,7 @@
 
 This is a complete implementation of a **Privacy-Aware Forensic DNA Matching System** that uses:
 - **20 CODIS Core STR Loci** for forensic DNA profiling
-- **Homomorphic Encryption** for privacy-preserving comparisons
+- **Hash-based encrypted comparison (HE-inspired demo)** for privacy-preserving comparisons
 - **Tanabe Similarity Score** algorithm for accurate matching
 - **Synthetic Profile Generation** for ethical testing
 
@@ -86,11 +86,11 @@ The server will start at: **http://127.0.0.1:5000**
 
 ## 🔒 Privacy Features
 
-### Homomorphic Encryption
+### Privacy-preserving encrypted comparison (demonstration)
 - Profiles are encrypted before matching
-- Matching performed on encrypted data
+- Matching can be performed using deterministic encrypted markers
 - Raw DNA never exposed during comparison
-- Uses SHA-256 hashing with salted keys
+- Uses SHA-256 hashing with keyed inputs (demonstration setup)
 
 ### Privacy-Preserving Matching
 - No plaintext DNA data exchanged
@@ -198,11 +198,11 @@ Flask web application with routes:
 ### Key Points to Include:
 
 1. **Problem Statement**: Privacy concerns in forensic DNA databases
-2. **Solution**: Homomorphic encryption for privacy-preserving matching
+2. **Solution**: Encrypted marker comparison for privacy-preserving matching (demo)
 3. **Technology Stack**: Python, Flask, SHA-256 hashing
 4. **Algorithms**: Tanabe similarity score, synthetic profile generation
-5. **Results**: Demonstrate matching accuracy with privacy preservation
-6. **Future Work**: MongoDB integration, real HE libraries (Paillier, SEAL)
+5. **Results**: Demonstrate matching accuracy with privacy-aware design
+6. **Future Work**: MongoDB integration, true HE libraries (Paillier, SEAL)
 
 ### Testing Scenarios:
 
@@ -217,7 +217,7 @@ Flask web application with routes:
 
 1. **MongoDB Integration**: Persistent storage
 2. **User Authentication**: Secure access control
-3. **Paillier HE Library**: True homomorphic encryption
+3. **Paillier HE Library**: Upgrade to true homomorphic encryption
 4. **Batch Processing**: Large-scale database queries
 5. **REST API**: External system integration
 6. **Audit Logging**: Track all matches for forensic records

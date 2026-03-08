@@ -934,7 +934,8 @@
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
     
     <div class="theme-toggle" id="themeToggle">
-        <span id="themeIcon">🌙</span>
+        <span id="themeIcon">{% if theme == 'light' %}☀️{% else %}🌙{% endif %}</span>
+
     </div>
     
     <div class="settings-dropdown">

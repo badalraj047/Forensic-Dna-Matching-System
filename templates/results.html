@@ -205,7 +205,7 @@
     </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
-    <div class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></div>
+    <div class="theme-toggle" id="themeToggle"><i class="fas fa-{% if theme == 'light' %}sun{% else %}moon{% endif %}"></i></div>
 
     <div class="container">
         <div class="nav"><a href="/"><i class="fas fa-arrow-left"></i> Back to Dashboard</a></div>
