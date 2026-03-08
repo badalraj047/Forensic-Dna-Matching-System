@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-{% set flag_map = {
-    'India': '🇮🇳', 'USA': '🇺🇸', 'United States': '🇺🇸',
-    'UK': '🇬🇧', 'United Kingdom': '🇬🇧',
-    'Japan': '🇯🇵', 'China': '🇨🇳',
-    'Australia': '🇦🇺', 'Canada': '🇨🇦',
-    'Europe': '🇪🇺', 'Germany': '🇩🇪',
-    'France': '🇫🇷', 'Italy': '🇮🇹', 'Spain': '🇪🇸'
+{% set flag_codes = {
+    'India': 'in', 'USA': 'us', 'United States': 'us',
+    'UK': 'gb', 'United Kingdom': 'gb',
+    'Japan': 'jp', 'China': 'cn',
+    'Australia': 'au', 'Canada': 'ca',
+    'Europe': 'eu', 'Germany': 'de',
+    'France': 'fr', 'Italy': 'it', 'Spain': 'es'
 } %}
 <head>
     <meta charset="UTF-8">
@@ -447,7 +447,11 @@
 
                                 <div class="pc-field">
                                     <div class="pc-field-lbl"><i class="fas fa-flag"></i> Country</div>
-                                    <div class="pc-field-val blue">{{ flag_map.get(match.country or match.region, '🌍') }} {{ match.country or match.region or 'N/A' }}</div>
+                                    {% set c = match.country or match.region or '' %}
+                                    {% set fc = flag_codes.get(c, '') %}
+                                    <div class="pc-field-val blue">
+                                        {% if fc %}<img src="https://flagcdn.com/20x15/{{ fc }}.png" srcset="https://flagcdn.com/40x30/{{ fc }}.png 2x" width="20" height="15" alt="{{ c }}" style="border-radius:2px;vertical-align:middle;margin-right:4px;">{% else %}🌍 {% endif %}{{ c or 'N/A' }}
+                                    </div>
                                 </div>
 
                                 <div class="pc-field">

@@ -1129,17 +1129,19 @@
         // --- Fetch real profile count from /api/stats on page load ---
         let realProfileCount = 0;
 
-        // Country → flag emoji
+        // Country → flag image (cross-platform, works on all browsers/OS)
         function getFlag(country) {
-            const flags = {
-                'India': '🇮🇳', 'USA': '🇺🇸', 'United States': '🇺🇸',
-                'UK': '🇬🇧', 'United Kingdom': '🇬🇧',
-                'Japan': '🇯🇵', 'China': '🇨🇳',
-                'Australia': '🇦🇺', 'Canada': '🇨🇦',
-                'Europe': '🇪🇺', 'Germany': '🇩🇪', 'France': '🇫🇷',
-                'Italy': '🇮🇹', 'Spain': '🇪🇸'
+            const codes = {
+                'India': 'in', 'USA': 'us', 'United States': 'us',
+                'UK': 'gb', 'United Kingdom': 'gb',
+                'Japan': 'jp', 'China': 'cn',
+                'Australia': 'au', 'Canada': 'ca',
+                'Europe': 'eu', 'Germany': 'de',
+                'France': 'fr', 'Italy': 'it', 'Spain': 'es'
             };
-            return flags[country] || '🌍';
+            const code = codes[country];
+            if (!code) return '<span style="font-size:1em;">🌍</span>';
+            return `<img src="https://flagcdn.com/20x15/${code}.png" srcset="https://flagcdn.com/40x30/${code}.png 2x" width="20" height="15" alt="${country}" style="border-radius:2px;vertical-align:middle;margin-right:4px;">`;
         }
         fetch('/api/stats')
             .then(r => r.json())
