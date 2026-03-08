@@ -314,14 +314,19 @@
             align-items: center;
             padding: 16px 20px 12px;
             border-bottom: 1px solid rgba(14, 165, 233, 0.1);
+            gap: 16px;
+            min-width: 0;
         }
 
-        .rc-name-block { display: flex; flex-direction: column; gap: 3px; }
+        .rc-name-block { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; overflow: hidden; }
 
         .rc-name {
             font-weight: 700;
             font-size: 1.05em;
             color: #f1f5f9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         body.light-mode .rc-name { color: #1e293b; }
 
@@ -330,6 +335,9 @@
             font-size: 0.72em;
             color: #64748b;
             letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .rc-score-wrap { display: flex; align-items: center; gap: 10px; }
@@ -1207,8 +1215,8 @@
 
                             <div class="rc-header">
                                 <div class="rc-name-block">
-                                    <div class="rc-name"><i class="fas fa-user-circle" style="color:#0ea5e9;margin-right:8px;"></i>${r.name || r.target_id}</div>
-                                    <div class="rc-id">${r.target_id}</div>
+                                    <div class="rc-name"><i class="fas fa-user-circle" style="color:#0ea5e9;margin-right:8px;"></i>${r.name || 'Unknown'}</div>
+                                    <div class="rc-id"><i class="fas fa-fingerprint" style="margin-right:4px;opacity:0.5;"></i>${r.target_id}</div>
                                 </div>
                                 <div class="rc-score-wrap">
                                     <div class="rc-score ${scoreClass}">${(r.score * 100).toFixed(2)}%</div>
@@ -1217,8 +1225,16 @@
 
                             <div class="rc-details">
                                 <div class="rc-field">
-                                    <div class="rc-field-label"><i class="fas fa-globe"></i> Region</div>
-                                    <div class="rc-field-value blue">${r.region || 'N/A'}</div>
+                                    <div class="rc-field-label"><i class="fas fa-map-marker-alt"></i> Address</div>
+                                    <div class="rc-field-value">${r.address || 'N/A'}</div>
+                                </div>
+                                <div class="rc-field">
+                                    <div class="rc-field-label"><i class="fas fa-city"></i> City</div>
+                                    <div class="rc-field-value blue">${r.city || 'N/A'}</div>
+                                </div>
+                                <div class="rc-field">
+                                    <div class="rc-field-label"><i class="fas fa-flag"></i> Country</div>
+                                    <div class="rc-field-value blue">${r.country || r.region || 'N/A'}</div>
                                 </div>
                                 <div class="rc-field">
                                     <div class="rc-field-label"><i class="fas fa-tag"></i> Profile Type</div>

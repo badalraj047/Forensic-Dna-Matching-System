@@ -184,7 +184,7 @@
             padding: 14px 18px; gap: 12px; flex-wrap: wrap;
         }
 
-        .pc-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .pc-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; overflow: hidden; }
 
         .pc-avatar {
             width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
@@ -193,8 +193,8 @@
             font-weight: 800; font-size: 1em; color: white;
         }
 
-        .pc-name { font-weight: 700; font-size: 0.95em; color: var(--text); }
-        .pc-id   { font-family: 'Space Mono', monospace; font-size: 0.7em; color: var(--muted); margin-top: 2px; }
+        .pc-name { font-weight: 700; font-size: 0.95em; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pc-id   { font-family: 'Space Mono', monospace; font-size: 0.7em; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .pc-score {
             font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.95em;
@@ -352,7 +352,7 @@
                         <div class="pc-top">
                             <div class="pc-left">
                                 <div class="pc-avatar">{{ (match.name or match.target_id)[0]|upper }}</div>
-                                <div>
+                                <div style="min-width:0;overflow:hidden;">
                                     <div class="pc-name">{{ match.name or match.target_id }}</div>
                                     <div class="pc-id">{{ match.target_id }}</div>
                                 </div>
@@ -381,8 +381,18 @@
                                 </div>
 
                                 <div class="pc-field">
-                                    <div class="pc-field-lbl"><i class="fas fa-globe"></i> Region</div>
-                                    <div class="pc-field-val blue">{{ match.region or 'N/A' }}</div>
+                                    <div class="pc-field-lbl"><i class="fas fa-map-marker-alt"></i> Address</div>
+                                    <div class="pc-field-val">{{ match.address or 'N/A' }}</div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-city"></i> City</div>
+                                    <div class="pc-field-val blue">{{ match.city or 'N/A' }}</div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-flag"></i> Country</div>
+                                    <div class="pc-field-val blue">{{ match.country or match.region or 'N/A' }}</div>
                                 </div>
 
                                 <div class="pc-field">

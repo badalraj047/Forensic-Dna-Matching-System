@@ -670,16 +670,19 @@ def match_profiles():
 
                 if score >= threshold:
                     results.append({
-                        'target_id':     target_profile['id'],
-                        'name':          target_profile.get('name', 'Unknown'),
-                        'region':        target_profile.get('region', 'N/A'),
-                        'type':          target_profile.get('type', 'N/A'),
-                        'status':        status,
+                        'target_id':      target_profile['id'],
+                        'name':           target_profile.get('name', 'Unknown'),
+                        'region':         target_profile.get('region', 'N/A'),
+                        'country':        target_profile.get('country', 'N/A'),
+                        'address':        target_profile.get('address', 'N/A'),
+                        'city':           target_profile.get('city', 'N/A'),
+                        'type':           target_profile.get('type', 'N/A'),
+                        'status':         status,
                         'profile_status': target_profile.get('status', 'N/A'),
-                        'verified':      target_profile.get('verified', False),
-                        'quality_score': target_profile.get('quality_score', 0),
-                        'score':         score,
-                        'encrypted':     use_encryption,
+                        'verified':       target_profile.get('verified', False),
+                        'quality_score':  target_profile.get('quality_score', 0),
+                        'score':          score,
+                        'encrypted':      use_encryption,
                     })
 
             results.sort(key=lambda x: x['score'], reverse=True)
