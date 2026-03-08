@@ -8,7 +8,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
 
         :root {
             --primary: #1e3a8a;
@@ -364,9 +364,380 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* ===== FORENSIC SEARCH OVERLAY ===== */
+        #forensicOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(5, 10, 25, 0.97);
+            backdrop-filter: blur(12px);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        #forensicOverlay.active {
+            display: flex;
+            animation: overlayFadeIn 0.4s ease-out;
+        }
+
+        @keyframes overlayFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Scanline sweep across the whole screen */
+        #forensicOverlay::before {
+            content: '';
+            position: absolute;
+            top: -5%;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, transparent 0%, rgba(0, 210, 255, 0.0) 20%, rgba(0, 210, 255, 0.8) 50%, rgba(0, 210, 255, 0.0) 80%, transparent 100%);
+            box-shadow: 0 0 30px 10px rgba(0, 210, 255, 0.3);
+            animation: scanSweep 2.5s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes scanSweep {
+            0%   { top: -5%; }
+            100% { top: 105%; }
+        }
+
+        /* Hex grid background pattern */
+        #forensicOverlay::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, rgba(0,210,255,0.03) 0px, transparent 1px, transparent 40px, rgba(0,210,255,0.03) 41px),
+                repeating-linear-gradient(90deg, rgba(0,210,255,0.03) 0px, transparent 1px, transparent 40px, rgba(0,210,255,0.03) 41px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .overlay-inner {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 36px;
+            width: 100%;
+            max-width: 560px;
+            padding: 0 20px;
+        }
+
+        /* ---- DNA Helix ---- */
+        .dna-helix-wrap {
+            position: relative;
+            width: 90px;
+            height: 200px;
+        }
+
+        .dna-strand {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .dna-strand svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Rotating glow ring behind helix */
+        .dna-glow-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 130px;
+            height: 130px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid transparent;
+            background: conic-gradient(from 0deg, #00d4ff, #06b6d4, #0ea5e9, #1e3a8a, #00d4ff);
+            -webkit-mask: radial-gradient(circle, transparent 56px, black 57px);
+            mask: radial-gradient(circle, transparent 56px, black 57px);
+            animation: ringRotate 3s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes ringRotate {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Orbiting particle */
+        .orbit-particle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 130px;
+            height: 130px;
+            transform: translate(-50%, -50%);
+            animation: orbitSpin 2s linear infinite;
+        }
+
+        .orbit-particle::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: #00d4ff;
+            border-radius: 50%;
+            box-shadow: 0 0 12px 4px rgba(0, 212, 255, 0.8);
+            transform: translateX(-50%);
+        }
+
+        @keyframes orbitSpin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* ---- Title ---- */
+        .overlay-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.8em;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #00d4ff, #06b6d4, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.4); }
+        }
+
+        /* ---- Status line ---- */
+        .overlay-status {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 0.92em;
+            color: #00d4ff;
+            letter-spacing: 1.5px;
+            text-align: center;
+            min-height: 1.4em;
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay-status::before {
+            content: '> ';
+            color: #06b6d4;
+            opacity: 0.7;
+        }
+
+        /* ---- Progress bar ---- */
+        .overlay-progress-wrap {
+            width: 100%;
+            background: rgba(0, 210, 255, 0.08);
+            border: 1px solid rgba(0, 210, 255, 0.25);
+            border-radius: 999px;
+            height: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .overlay-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #1e3a8a, #0ea5e9, #00d4ff);
+            border-radius: 999px;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 14px rgba(0, 210, 255, 0.7);
+            position: relative;
+        }
+
+        .overlay-progress-bar::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            background: #00d4ff;
+            border-radius: 50%;
+            box-shadow: 0 0 16px 4px rgba(0, 212, 255, 0.9);
+        }
+
+        /* ---- Loci scan grid ---- */
+        .loci-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            width: 100%;
+        }
+
+        .loci-chip {
+            background: rgba(0, 210, 255, 0.06);
+            border: 1px solid rgba(0, 210, 255, 0.15);
+            border-radius: 6px;
+            padding: 6px 4px;
+            text-align: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.62em;
+            color: rgba(0, 210, 255, 0.4);
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .loci-chip.scanned {
+            background: rgba(0, 210, 255, 0.15);
+            border-color: rgba(0, 210, 255, 0.6);
+            color: #00d4ff;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+            animation: lociPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .loci-chip.matched {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.7);
+            color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        @keyframes lociPop {
+            0% { transform: scale(0.85); opacity: 0.4; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* ---- Counter ---- */
+        .overlay-counter {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.82em;
+            color: rgba(0, 210, 255, 0.5);
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .overlay-counter span {
+            color: #00d4ff;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
+
+    <!-- ===== FORENSIC DNA SEARCH OVERLAY ===== -->
+    <div id="forensicOverlay">
+        <div class="overlay-inner">
+
+            <!-- DNA Helix Visual -->
+            <div class="dna-helix-wrap">
+                <div class="dna-glow-ring"></div>
+                <div class="orbit-particle"></div>
+                <div class="dna-strand">
+                    <svg viewBox="0 0 90 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Strand 1 (sine wave left) -->
+                        <path id="strand1" d="M45 10 Q15 30 45 50 Q75 70 45 90 Q15 110 45 130 Q75 150 45 170 Q15 190 45 190"
+                              stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round" fill="none">
+                            <animate attributeName="d"
+                                values="
+                                    M45 10 Q15 30 45 50 Q75 70 45 90 Q15 110 45 130 Q75 150 45 170 Q15 190 45 190;
+                                    M45 10 Q75 30 45 50 Q15 70 45 90 Q75 110 45 130 Q15 150 45 170 Q75 190 45 190;
+                                    M45 10 Q15 30 45 50 Q75 70 45 90 Q15 110 45 130 Q75 150 45 170 Q15 190 45 190"
+                                dur="2s" repeatCount="indefinite"/>
+                        </path>
+                        <!-- Strand 2 (opposite phase) -->
+                        <path id="strand2" d="M45 10 Q75 30 45 50 Q15 70 45 90 Q75 110 45 130 Q15 150 45 170 Q75 190 45 190"
+                              stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round" fill="none">
+                            <animate attributeName="d"
+                                values="
+                                    M45 10 Q75 30 45 50 Q15 70 45 90 Q75 110 45 130 Q15 150 45 170 Q75 190 45 190;
+                                    M45 10 Q15 30 45 50 Q75 70 45 90 Q15 110 45 130 Q75 150 45 170 Q15 190 45 190;
+                                    M45 10 Q75 30 45 50 Q15 70 45 90 Q75 110 45 130 Q15 150 45 170 Q75 190 45 190"
+                                dur="2s" repeatCount="indefinite"/>
+                        </path>
+                        <!-- Rungs (horizontal bars) -->
+                        <line x1="28" y1="50" x2="62" y2="50" stroke="rgba(0,210,255,0.45)" stroke-width="1.5">
+                            <animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" begin="0s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="15" y1="90" x2="75" y2="90" stroke="rgba(0,210,255,0.45)" stroke-width="1.5">
+                            <animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" begin="0.3s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="28" y1="130" x2="62" y2="130" stroke="rgba(0,210,255,0.45)" stroke-width="1.5">
+                            <animate attributeName="opacity" values="0.4;1;0.4" dur="1.8s" begin="0.6s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="15" y1="50" x2="75" y2="50" stroke="rgba(16,185,129,0.4)" stroke-width="1.5">
+                            <animate attributeName="opacity" values="1;0.2;1" dur="1.8s" begin="0s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="28" y1="90" x2="62" y2="90" stroke="rgba(16,185,129,0.4)" stroke-width="1.5">
+                            <animate attributeName="opacity" values="1;0.2;1" dur="1.8s" begin="0.3s" repeatCount="indefinite"/>
+                        </line>
+                        <line x1="15" y1="130" x2="75" y2="130" stroke="rgba(16,185,129,0.4)" stroke-width="1.5">
+                            <animate attributeName="opacity" values="1;0.2;1" dur="1.8s" begin="0.6s" repeatCount="indefinite"/>
+                        </line>
+                        <!-- Dots on strands -->
+                        <circle cx="45" cy="10" r="4" fill="#00d4ff" opacity="0.9">
+                            <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                        <circle cx="45" cy="190" r="4" fill="#06b6d4" opacity="0.9">
+                            <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                        <defs>
+                            <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#00d4ff"/>
+                                <stop offset="100%" stop-color="#06b6d4"/>
+                            </linearGradient>
+                            <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#0ea5e9"/>
+                                <stop offset="100%" stop-color="#10b981"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="overlay-title">🔬 Forensic DNA Scan</div>
+
+            <div class="overlay-status" id="overlayStatus">Initializing secure channel...</div>
+
+            <div class="overlay-progress-wrap">
+                <div class="overlay-progress-bar" id="overlayProgressBar"></div>
+            </div>
+
+            <!-- 20 CODIS loci chips -->
+            <div class="loci-grid" id="lociGrid">
+                <div class="loci-chip" data-locus="D3S1358">D3S1358</div>
+                <div class="loci-chip" data-locus="VWA">VWA</div>
+                <div class="loci-chip" data-locus="FGA">FGA</div>
+                <div class="loci-chip" data-locus="D8S1179">D8S1179</div>
+                <div class="loci-chip" data-locus="D21S11">D21S11</div>
+                <div class="loci-chip" data-locus="D18S51">D18S51</div>
+                <div class="loci-chip" data-locus="D5S818">D5S818</div>
+                <div class="loci-chip" data-locus="D13S317">D13S317</div>
+                <div class="loci-chip" data-locus="D7S820">D7S820</div>
+                <div class="loci-chip" data-locus="CSF1PO">CSF1PO</div>
+                <div class="loci-chip" data-locus="TPOX">TPOX</div>
+                <div class="loci-chip" data-locus="TH01">TH01</div>
+                <div class="loci-chip" data-locus="D16S539">D16S539</div>
+                <div class="loci-chip" data-locus="D2S1338">D2S1338</div>
+                <div class="loci-chip" data-locus="D19S433">D19S433</div>
+                <div class="loci-chip" data-locus="vWA">vWA</div>
+                <div class="loci-chip" data-locus="AMEL">AMEL</div>
+                <div class="loci-chip" data-locus="D1S1656">D1S1656</div>
+                <div class="loci-chip" data-locus="D12S391">D12S391</div>
+                <div class="loci-chip" data-locus="SE33">SE33</div>
+            </div>
+
+            <div class="overlay-counter">
+                PROFILES SCANNED: <span id="overlayCount">0</span>
+            </div>
+        </div>
+    </div>
+    <!-- ===== END FORENSIC OVERLAY ===== -->
+
     <div class="theme-toggle" id="themeToggle">
         <i class="fas fa-{% if theme == 'light' %}sun{% else %}moon{% endif %}"></i>
 
@@ -459,32 +830,139 @@
         const display = document.getElementById('thresholdValue');
         if(slider) slider.addEventListener('input', e => display.textContent = e.target.value);
 
+        // ===== FORENSIC SEARCH OVERLAY CONTROLLER =====
+        const FORENSIC_PHASES = [
+            { msg: "Initializing secure channel...",      pct: 5,   delay: 0 },
+            { msg: "Decrypting query profile...",          pct: 12,  delay: 400 },
+            { msg: "Loading 20 CODIS STR loci...",         pct: 22,  delay: 900 },
+            { msg: "Scanning allele frequencies...",       pct: 38,  delay: 1500 },
+            { msg: "Applying homomorphic encryption...",   pct: 52,  delay: 2100 },
+            { msg: "Running Tanabe similarity scoring...", pct: 68,  delay: 2800 },
+            { msg: "Comparing against database...",        pct: 80,  delay: 3400 },
+            { msg: "Filtering by threshold...",            pct: 90,  delay: 4000 },
+            { msg: "Compiling forensic report...",         pct: 97,  delay: 4500 },
+        ];
+
+        let overlayTimers = [];
+        let countTimer = null;
+
+        function startForensicOverlay(totalProfiles) {
+            const overlay    = document.getElementById('forensicOverlay');
+            const statusEl   = document.getElementById('overlayStatus');
+            const progressEl = document.getElementById('overlayProgressBar');
+            const countEl    = document.getElementById('overlayCount');
+            const chips      = document.querySelectorAll('.loci-chip');
+
+            // Reset all chips
+            chips.forEach(c => { c.classList.remove('scanned', 'matched'); });
+            progressEl.style.width = '0%';
+            countEl.textContent = '0';
+            statusEl.textContent = 'Initializing secure channel...';
+            overlayTimers = [];
+
+            overlay.classList.add('active');
+
+            // Phase messages + progress
+            FORENSIC_PHASES.forEach(phase => {
+                const t = setTimeout(() => {
+                    statusEl.style.opacity = '0';
+                    setTimeout(() => {
+                        statusEl.textContent = phase.msg;
+                        statusEl.style.opacity = '1';
+                    }, 150);
+                    progressEl.style.width = phase.pct + '%';
+                }, phase.delay);
+                overlayTimers.push(t);
+            });
+
+            // Loci chips — light up one by one over ~3s
+            chips.forEach((chip, i) => {
+                const t = setTimeout(() => {
+                    chip.classList.add('scanned');
+                    // Last few turn green as "matched"
+                    if (i >= 15) {
+                        setTimeout(() => chip.classList.add('matched'), 300);
+                    }
+                }, 900 + i * 160);
+                overlayTimers.push(t);
+            });
+
+            // Profile counter animation
+            const target = totalProfiles || 500;
+            let current = 0;
+            const step = Math.ceil(target / 60);
+            countTimer = setInterval(() => {
+                current = Math.min(current + step + Math.floor(Math.random() * step), target);
+                countEl.textContent = current.toLocaleString();
+                if (current >= target) clearInterval(countTimer);
+            }, 60);
+        }
+
+        function stopForensicOverlay() {
+            overlayTimers.forEach(t => clearTimeout(t));
+            clearInterval(countTimer);
+            const overlay = document.getElementById('forensicOverlay');
+            const progressEl = document.getElementById('overlayProgressBar');
+            progressEl.style.width = '100%';
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                overlay.style.transition = 'opacity 0.4s ease';
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                    overlay.style.opacity = '';
+                    overlay.style.transition = '';
+                }, 400);
+            }, 300);
+        }
+
         const form = document.getElementById('matchForm');
         if(form) {
             form.addEventListener('submit', e => {
                 e.preventDefault();
                 const btn = e.target.querySelector('.btn');
-                btn.innerHTML = '<span class="spinner"></span>Analyzing...';
                 btn.disabled = true;
 
+                // Kick off the overlay
+                startForensicOverlay(0);
+
                 const data = new FormData(form);
+
+                // Minimum display time of 5 seconds for full effect
+                const MIN_DISPLAY = 5000;
+                const startTime = Date.now();
+
                 fetch('/match', { method: 'POST', body: data })
                     .then(r => r.json())
                     .then(d => {
-                        const results = document.getElementById('resultsContainer');
-                        const content = document.getElementById('resultsContent');
-                        results.style.display = 'block';
+                        const elapsed = Date.now() - startTime;
+                        const remaining = Math.max(0, MIN_DISPLAY - elapsed);
 
-                        if(d.success && d.results.length > 0) {
-                            let html = '<div style="padding:16px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:10px;margin-bottom:20px;border-left:4px solid #10b981;"><i class="fas fa-check-circle"></i> <strong>Found ' + d.matches_found + ' match(es)</strong></div>';
-                            d.results.forEach((r, i) => {
-                                html += `<div class="result-card" style="animation-delay:${i*0.1}s;"><div class="result-header"><div class="result-id">${r.target_id}</div><div class="result-score">${(r.score*100).toFixed(2)}%</div></div><div class="result-status"><span class="badge badge-match"><i class="fas fa-check"></i> ${r.status}</span>${r.encrypted ? ' <span style="color:#10b981;"><i class="fas fa-lock"></i> Encrypted</span>' : ''}</div></div>`;
-                            });
-                            content.innerHTML = html;
-                        } else {
-                            content.innerHTML = '<div style="text-align:center;padding:30px;color:#cbd5e1;"><i class="fas fa-inbox"></i><p style="margin-top:10px;">No matches found. Try lowering the threshold.</p></div>';
-                        }
+                        setTimeout(() => {
+                            stopForensicOverlay();
 
+                            setTimeout(() => {
+                                const results = document.getElementById('resultsContainer');
+                                const content = document.getElementById('resultsContent');
+                                results.style.display = 'block';
+                                results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                                if(d.success && d.results.length > 0) {
+                                    let html = '<div style="padding:16px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:10px;margin-bottom:20px;border-left:4px solid #10b981;"><i class="fas fa-check-circle"></i> <strong>Found ' + d.matches_found + ' match(es)</strong></div>';
+                                    d.results.forEach((r, i) => {
+                                        html += `<div class="result-card" style="animation-delay:${i*0.1}s;"><div class="result-header"><div class="result-id">${r.target_id}</div><div class="result-score">${(r.score*100).toFixed(2)}%</div></div><div class="result-status"><span class="badge badge-match"><i class="fas fa-check"></i> ${r.status}</span>${r.encrypted ? ' <span style="color:#10b981;"><i class="fas fa-lock"></i> Encrypted</span>' : ''}</div></div>`;
+                                    });
+                                    content.innerHTML = html;
+                                } else {
+                                    content.innerHTML = '<div style="text-align:center;padding:30px;color:#cbd5e1;"><i class="fas fa-inbox"></i><p style="margin-top:10px;">No matches found. Try lowering the threshold.</p></div>';
+                                }
+
+                                btn.innerHTML = '<i class="fas fa-search"></i> Start Matching';
+                                btn.disabled = false;
+                            }, 500);
+                        }, remaining);
+                    })
+                    .catch(() => {
+                        stopForensicOverlay();
                         btn.innerHTML = '<i class="fas fa-search"></i> Start Matching';
                         btn.disabled = false;
                     });
