@@ -286,12 +286,12 @@
         }
 
         .result-card {
-            background: rgba(14, 165, 233, 0.1);
-            border: 1px solid rgba(14, 165, 233, 0.3);
+            background: rgba(11, 22, 41, 0.9);
+            border: 1px solid rgba(14, 165, 233, 0.25);
             border-left: 4px solid var(--success);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
             transition: all 0.3s ease;
             animation: slideInLeft 0.4s ease-out;
         }
@@ -302,40 +302,131 @@
         }
 
         .result-card:hover {
-            transform: translateX(8px);
-            background: rgba(14, 165, 233, 0.2);
-            border-color: rgba(14, 165, 233, 0.6);
+            transform: translateX(6px);
+            border-color: rgba(14, 165, 233, 0.55);
+            box-shadow: 0 12px 35px rgba(14, 165, 233, 0.15);
         }
 
-        .result-header {
+        /* top row: name + score badge */
+        .rc-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid rgba(14, 165, 233, 0.1);
         }
 
-        .result-id { font-weight: 700; color: #f1f5f9; font-size: 1.05em; }
+        .rc-name-block { display: flex; flex-direction: column; gap: 3px; }
 
-        body.light-mode .result-id { color: #1e293b; }
+        .rc-name {
+            font-weight: 700;
+            font-size: 1.05em;
+            color: #f1f5f9;
+        }
+        body.light-mode .rc-name { color: #1e293b; }
 
-        .result-score {
-            background: linear-gradient(135deg, var(--success), #059669);
+        .rc-id {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72em;
+            color: #64748b;
+            letter-spacing: 0.5px;
+        }
+
+        .rc-score-wrap { display: flex; align-items: center; gap: 10px; }
+
+        .rc-score {
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            padding: 6px 14px;
+            padding: 6px 16px;
             border-radius: 20px;
             font-weight: 700;
-            font-size: 0.95em;
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+            font-size: 1em;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.35);
+            font-family: 'Space Mono', monospace;
         }
 
-        .result-status {
-            padding: 10px;
-            background: rgba(6, 182, 212, 0.1);
-            border-radius: 8px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
+        .rc-score.definite { background: linear-gradient(135deg, #10b981, #059669); }
+        .rc-score.probable { background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 5px 15px rgba(14,165,233,0.35); }
+        .rc-score.partial  { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 5px 15px rgba(245,158,11,0.35); }
+
+        /* detail grid */
+        .rc-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0;
+            padding: 0;
         }
+
+        .rc-field {
+            padding: 12px 20px;
+            border-right: 1px solid rgba(14, 165, 233, 0.08);
+            border-bottom: 1px solid rgba(14, 165, 233, 0.08);
+            transition: background 0.2s ease;
+        }
+        .rc-field:hover { background: rgba(14, 165, 233, 0.04); }
+        .rc-field:last-child { border-right: none; }
+
+        .rc-field-label {
+            font-size: 0.68em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .rc-field-label i { color: var(--secondary); font-size: 0.9em; }
+
+        .rc-field-value {
+            font-size: 0.88em;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        body.light-mode .rc-field-value { color: #1e293b; }
+
+        .rc-field-value.green { color: #10b981; }
+        .rc-field-value.blue  { color: #0ea5e9; }
+        .rc-field-value.amber { color: #f59e0b; }
+
+        /* quality bar */
+        .quality-bar-wrap {
+            height: 5px;
+            background: rgba(14,165,233,0.1);
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .quality-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #0ea5e9, #10b981);
+            transition: width 0.8s ease;
+        }
+
+        .rc-footer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: rgba(14, 165, 233, 0.04);
+            border-top: 1px solid rgba(14, 165, 233, 0.08);
+            flex-wrap: wrap;
+        }
+
+        .rc-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .rc-tag.green { color: #10b981; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); }
+        .rc-tag.blue  { color: #0ea5e9; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.3); }
+        .rc-tag.amber { color: #f59e0b; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
 
         .badge {
             display: inline-block;
@@ -1057,7 +1148,7 @@
                     row.className = 'verdict-match-row';
                     row.style.animationDelay = (i * 0.08) + 's';
                     row.innerHTML = `
-                        <div class="verdict-match-id"><i class="fas fa-dna" style="color:#10b981;margin-right:6px;"></i>${r.target_id}</div>
+                        <div class="verdict-match-id"><i class="fas fa-user-circle" style="color:#10b981;margin-right:6px;"></i>${r.name || r.target_id}<span style="font-size:0.8em;color:#64748b;margin-left:8px;">(${r.target_id})</span></div>
                         <div class="verdict-match-right">
                             ${r.encrypted ? '<span class="verdict-match-enc"><i class="fas fa-lock"></i></span>' : ''}
                             <div class="verdict-match-score">${(r.score * 100).toFixed(2)}%</div>
@@ -1100,17 +1191,60 @@
 
                 const d = pendingData;
                 if (d && d.success && d.results.length > 0) {
-                    let html = `<div style="padding:16px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);border-radius:10px;margin-bottom:20px;border-left:4px solid #10b981;">
-                        <i class="fas fa-check-circle"></i> <strong>Found ${d.matches_found} match(es)</strong></div>`;
+                    let html = `<div style="padding:16px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:12px;margin-bottom:22px;border-left:4px solid #10b981;display:flex;align-items:center;gap:10px;">
+                        <i class="fas fa-check-circle" style="color:#10b981;font-size:1.2em;"></i>
+                        <strong>Found ${d.matches_found} match(es) in database</strong>
+                    </div>`;
+
                     d.results.forEach((r, i) => {
-                        html += `<div class="result-card" style="animation-delay:${i*0.1}s;">
-                            <div class="result-header">
-                                <div class="result-id">${r.target_id}</div>
-                                <div class="result-score">${(r.score*100).toFixed(2)}%</div>
+                        const scoreClass = r.status === 'DEFINITE MATCH' ? 'definite' : r.status === 'PROBABLE MATCH' ? 'probable' : 'partial';
+                        const borderColor = r.status === 'DEFINITE MATCH' ? '#10b981' : r.status === 'PROBABLE MATCH' ? '#0ea5e9' : '#f59e0b';
+                        const quality = Math.round((r.quality_score || 0) * 100);
+                        const qualityColor = quality >= 90 ? 'green' : quality >= 70 ? 'blue' : 'amber';
+
+                        html += `
+                        <div class="result-card" style="border-left-color:${borderColor};animation-delay:${i*0.1}s;">
+
+                            <div class="rc-header">
+                                <div class="rc-name-block">
+                                    <div class="rc-name"><i class="fas fa-user-circle" style="color:#0ea5e9;margin-right:8px;"></i>${r.name || r.target_id}</div>
+                                    <div class="rc-id">${r.target_id}</div>
+                                </div>
+                                <div class="rc-score-wrap">
+                                    <div class="rc-score ${scoreClass}">${(r.score * 100).toFixed(2)}%</div>
+                                </div>
                             </div>
-                            <div class="result-status">
-                                <span class="badge badge-match"><i class="fas fa-check"></i> ${r.status}</span>
-                                ${r.encrypted ? '<span style="color:#10b981;margin-left:8px;"><i class="fas fa-lock"></i> Encrypted</span>' : ''}
+
+                            <div class="rc-details">
+                                <div class="rc-field">
+                                    <div class="rc-field-label"><i class="fas fa-globe"></i> Region</div>
+                                    <div class="rc-field-value blue">${r.region || 'N/A'}</div>
+                                </div>
+                                <div class="rc-field">
+                                    <div class="rc-field-label"><i class="fas fa-tag"></i> Profile Type</div>
+                                    <div class="rc-field-value">${r.type || 'N/A'}</div>
+                                </div>
+                                <div class="rc-field">
+                                    <div class="rc-field-label"><i class="fas fa-shield-alt"></i> Match Status</div>
+                                    <div class="rc-field-value ${scoreClass === 'definite' ? 'green' : scoreClass === 'probable' ? 'blue' : 'amber'}">${r.status}</div>
+                                </div>
+                                <div class="rc-field">
+                                    <div class="rc-field-label"><i class="fas fa-star"></i> Data Quality</div>
+                                    <div class="rc-field-value ${qualityColor}">${quality}%</div>
+                                    <div class="quality-bar-wrap">
+                                        <div class="quality-bar-fill" style="width:${quality}%"></div>
+                                    </div>
+                                </div>
+                                <div class="rc-field">
+                                    <div class="rc-field-label"><i class="fas fa-info-circle"></i> Record Status</div>
+                                    <div class="rc-field-value green">${r.profile_status || 'ACTIVE'}</div>
+                                </div>
+                            </div>
+
+                            <div class="rc-footer">
+                                ${r.verified ? '<span class="rc-tag green"><i class="fas fa-check-circle"></i> Verified</span>' : '<span class="rc-tag amber"><i class="fas fa-clock"></i> Unverified</span>'}
+                                ${r.encrypted ? '<span class="rc-tag blue"><i class="fas fa-lock"></i> Encrypted Match</span>' : ''}
+                                <span class="rc-tag blue"><i class="fas fa-dna"></i> 20 CODIS Loci</span>
                             </div>
                         </div>`;
                     });
