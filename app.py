@@ -370,7 +370,7 @@ def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    theme = session.get('theme', 'light')
+    theme = session.get('theme', 'dark')
     stats = {
         'total_profiles': len(DATABASE['profiles']),
         'encrypted_profiles': len(DATABASE['encrypted_profiles']),
@@ -428,7 +428,7 @@ def login():
                 session['user_id'] = user['id']
                 session['email'] = user['email']
                 session['username'] = user['username']
-                session.setdefault('theme', 'light')
+                session.setdefault('theme', 'dark')
                 return jsonify({
                     'success': True,
                     'message': 'Login successful',
@@ -462,7 +462,7 @@ def profile_redirect():
 def crime_scene_page():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    theme = session.get('theme', 'light')
+    theme = session.get('theme', 'dark')
     return render_template('crime-scene.html', theme=theme)
 
 
@@ -490,7 +490,7 @@ def get_user_info():
 def toggle_theme():
     if 'user_id' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'}), 401
-    current = session.get('theme', 'light')
+    current = session.get('theme', 'dark')
     session['theme'] = 'dark' if current == 'light' else 'light'
     return jsonify({'theme': session['theme']})
 
@@ -551,7 +551,7 @@ def generate_profile():
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
-    theme = session.get('theme', 'light')
+    theme = session.get('theme', 'dark')
     return render_template('generate.html', theme=theme)
 
 
@@ -604,7 +604,7 @@ def upload_profile():
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
-    theme = session.get('theme', 'light')
+    theme = session.get('theme', 'dark')
     return render_template('upload.html', theme=theme)
 
 
@@ -688,7 +688,7 @@ def match_profiles():
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
-    theme = session.get('theme', 'light')
+    theme = session.get('theme', 'dark')
     available_profiles = [p['id'] for p in DATABASE['profiles']]
     last_uploaded_profile_id = None
     if session.get('last_uploaded_profile'):
@@ -707,7 +707,7 @@ def view_results():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    theme = session.get('theme', 'light')
+    theme = session.get('theme', 'dark')
     return render_template('results.html', results=DATABASE['match_results'], theme=theme)
 
 
