@@ -428,7 +428,7 @@ def login():
                 session['user_id'] = user['id']
                 session['email'] = user['email']
                 session['username'] = user['username']
-                session.setdefault('theme', 'dark')
+                session['theme'] = 'dark'
                 return jsonify({
                     'success': True,
                     'message': 'Login successful',
