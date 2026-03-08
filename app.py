@@ -738,10 +738,28 @@ def get_stats():
 def get_notifications():
     if 'user_id' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    seen_ids = session.get('seen_notification_ids', [])
+    notifications_with_status = []
+    for n in DATABASE['notifications']:
+        n_copy = dict(n)
+        n_copy['seen'] = n['id'] in seen_ids
+        notifications_with_status.append(n_copy)
+    unread_count = sum(1 for n in notifications_with_status if not n['seen'])
     return jsonify({
         'success': True,
-        'notifications': DATABASE['notifications']
+        'notifications': notifications_with_status,
+        'unread_count': unread_count
     })
+
+
+@app.route('/api/notifications/mark-seen', methods=['POST'])
+def mark_notifications_seen():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    all_ids = [n['id'] for n in DATABASE['notifications']]
+    session['seen_notification_ids'] = all_ids
+    session.modified = True
+    return jsonify({'success': True})
 
 
 # ===== CRIME SCENE MATCHING =====

@@ -957,7 +957,7 @@
     <div class="notification-container">
         <div class="notification-button" id="notificationBell">
             <i class="fas fa-bell"></i>
-            <span id="notificationCount">0</span>
+            <span id="notificationCount" style="display:none;">0</span>
         </div>
         <div id="notificationPanel">
             <div style="padding: 10px; font-weight: 600; border-bottom: 2px solid rgba(14, 165, 233, 0.3);">
@@ -1212,8 +1212,22 @@
 
     let allNotifications = [];
 
+    // When bell is clicked — open panel AND mark all as seen
     notificationBell.addEventListener('click', function() {
+        const isOpening = !notificationPanel.classList.contains('show');
         notificationPanel.classList.toggle('show');
+
+        if (isOpening) {
+            // Mark all seen immediately on open
+            fetch('/api/notifications/mark-seen', { method: 'POST' })
+                .then(() => {
+                    // Hide count badge and stop blink right away
+                    notificationCount.style.display = 'none';
+                    notificationBell.classList.remove('blink');
+                    // Re-render list with seen styling
+                    renderNotifications(allNotifications, true);
+                });
+        }
     });
 
     document.addEventListener('click', function(event) {
@@ -1222,15 +1236,37 @@
         }
     });
 
+    function renderNotifications(notifications, allSeen) {
+        notificationList.innerHTML = '';
+        if (notifications.length === 0) {
+            notificationList.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.5;font-size:0.9em;">No notifications</div>';
+            return;
+        }
+        notifications.forEach(notif => {
+            const seen = allSeen || notif.seen;
+            const item = document.createElement('div');
+            item.className = 'notification-item';
+            item.style.opacity = seen ? '0.6' : '1';
+            item.style.borderLeft = seen ? '3px solid rgba(14,165,233,0.2)' : '3px solid #0ea5e9';
+            item.innerHTML = `
+                <strong>${notif.title}</strong>
+                ${!seen ? '<span style="float:right;width:8px;height:8px;background:#0ea5e9;border-radius:50%;display:inline-block;margin-top:4px;"></span>' : ''}
+                <p style="margin: 5px 0; color: #94a3b8; font-size: 0.9rem;">${notif.message}</p>
+                <small style="color: #64748b;">${new Date(notif.timestamp).toLocaleTimeString()}</small>
+            `;
+            notificationList.appendChild(item);
+        });
+    }
+
     async function updateNotifications() {
         try {
             const response = await fetch('/api/notifications');
             const data = await response.json();
-            
+
             if (data.success) {
                 allNotifications = data.notifications;
-                
-                const unreadCount = data.notifications.length;
+                const unreadCount = data.unread_count;
+
                 if (unreadCount > 0) {
                     notificationCount.textContent = unreadCount;
                     notificationCount.style.display = 'flex';
@@ -1239,18 +1275,11 @@
                     notificationCount.style.display = 'none';
                     notificationBell.classList.remove('blink');
                 }
-                
-                notificationList.innerHTML = '';
-                data.notifications.forEach(notif => {
-                    const item = document.createElement('div');
-                    item.className = 'notification-item';
-                    item.innerHTML = `
-                        <strong>${notif.title}</strong>
-                        <p style="margin: 5px 0; color: #666; font-size: 0.9rem;">${notif.message}</p>
-                        <small style="color: #999;">${new Date(notif.timestamp).toLocaleTimeString()}</small>
-                    `;
-                    notificationList.appendChild(item);
-                });
+
+                // Only re-render if panel is closed (don't override seen state while open)
+                if (!notificationPanel.classList.contains('show')) {
+                    renderNotifications(allNotifications, false);
+                }
             }
         } catch (error) {
             console.log('Error loading notifications:', error);
