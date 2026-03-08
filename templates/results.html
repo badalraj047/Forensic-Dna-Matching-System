@@ -3,258 +3,472 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results</title>
+    <title>Results History — Forensic DNA System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap');
+
+        :root {
+            --bg: #0f172a; --cyan: #0ea5e9; --cyan2: #06b6d4;
+            --green: #10b981; --text: #e2e8f0; --muted: #64748b;
+            --border: rgba(14,165,233,0.2); --surface: rgba(30,58,138,0.55);
+        }
 
         body {
             font-family: 'Sora', sans-serif;
             background: linear-gradient(to bottom, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
-            min-height: 100vh;
-            color: #e2e8f0;
-            padding: 40px 20px;
-            transition: all 0.3s ease;
+            min-height: 100vh; color: var(--text);
+            padding: 40px 20px; transition: all 0.3s ease;
         }
-
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(14,165,233,0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(14,165,233,0.03) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none; z-index: 0;
+        }
         body.light-mode {
             background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
-            color: #1e293b;
+            color: #1e293b; --text: #1e293b; --muted: #94a3b8;
         }
 
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
 
+        /* theme toggle */
         .theme-toggle {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            z-index: 1000;
-            background: rgba(30, 58, 138, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(14, 165, 233, 0.3);
-            padding: 14px 18px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            font-size: 1.3em;
-            color: white;
-            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
+            position: fixed; top: 25px; right: 25px; z-index: 1000;
+            background: rgba(30,58,138,0.8); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); padding: 14px 18px;
+            border-radius: 50px; cursor: pointer; font-size: 1.2em; color: white;
+            transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 10px 30px rgba(14,165,233,0.3);
         }
+        body.light-mode .theme-toggle { background: rgba(248,250,252,0.95); border-color: #e2e8f0; color: #1e293b; }
+        .theme-toggle:hover { transform: scale(1.1) rotate(15deg); }
 
-        body.light-mode .theme-toggle {
-            background: rgba(248, 250, 252, 0.95);
-            border-color: #e2e8f0;
-            color: #1e293b;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.15) rotate(15deg);
-        }
-
+        /* nav */
         .nav {
-            background: rgba(30, 58, 138, 0.6);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(14, 165, 233, 0.2);
-            padding: 16px 24px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); padding: 16px 24px;
+            border-radius: 15px; margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
-
-        body.light-mode .nav {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: #e2e8f0;
-        }
-
+        body.light-mode .nav { background: rgba(255,255,255,0.95); border-color: #e2e8f0; }
         .nav a {
-            color: #0ea5e9;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            color: var(--cyan); text-decoration: none; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease;
         }
+        .nav a:hover { transform: translateX(-5px); }
 
-        .card {
-            background: rgba(30, 58, 138, 0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(14, 165, 233, 0.3);
-            padding: 50px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        /* page header */
+        .page-header {
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 20px;
+            padding: 40px 44px; margin-bottom: 28px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+            animation: slideDown 0.5s ease-out;
         }
+        body.light-mode .page-header { background: rgba(255,255,255,0.95); border-color: #e2e8f0; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
 
-        body.light-mode .card {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: #e2e8f0;
-        }
-
-        h1 {
-            font-size: 2.8em;
-            font-weight: 800;
-            margin-bottom: 30px;
+        .page-header h1 {
+            font-size: 2.4em; font-weight: 800; margin-bottom: 6px;
             background: linear-gradient(135deg, #60a5fa, #06b6d4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-
-        body.light-mode h1 {
+        body.light-mode .page-header h1 {
             background: linear-gradient(135deg, #1e3a8a, #0ea5e9);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .page-header p { color: var(--muted); font-size: 1em; }
+
+        /* summary chips */
+        .summary-chips { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+        .chip {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 18px; border-radius: 20px; font-size: 0.82em; font-weight: 700;
+        }
+        .chip-blue  { background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.3); color: var(--cyan); }
+        .chip-green { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: var(--green); }
+        .chip-amber { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; }
+
+        /* ── SESSION CARD (outer) ── */
+        .session-card {
+            background: var(--surface); backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 18px;
+            margin-bottom: 18px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.5s ease-out both;
+        }
+        body.light-mode .session-card { background: rgba(255,255,255,0.92); border-color: #e2e8f0; }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+        /* session header — always visible, clickable */
+        .session-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 26px; cursor: pointer; user-select: none;
+            transition: background 0.2s ease; gap: 16px; flex-wrap: wrap;
+        }
+        .session-header:hover { background: rgba(14,165,233,0.06); }
+
+        .sh-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+
+        .sh-index {
+            width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+            background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Space Mono', monospace; font-size: 0.8em;
+            font-weight: 700; color: var(--cyan);
         }
 
-        .result-entry {
-            background: rgba(14, 165, 233, 0.1);
-            border: 1px solid rgba(14, 165, 233, 0.3);
-            border-left: 4px solid #0ea5e9;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            animation: slideInUp 0.5s ease-out;
+        .sh-info { min-width: 0; }
+        .sh-query {
+            font-weight: 700; font-size: 1em; color: var(--text);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sh-query i { color: var(--cyan); flex-shrink: 0; }
+        .sh-time { font-size: 0.76em; color: var(--muted); margin-top: 4px; font-family: 'Space Mono', monospace; }
+
+        .sh-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+        .sh-badge {
+            padding: 5px 14px; border-radius: 20px; font-size: 0.8em; font-weight: 700;
+        }
+        .sh-badge.found   { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: var(--green); }
+        .sh-badge.none    { background: rgba(100,116,139,0.15); border: 1px solid rgba(100,116,139,0.3); color: var(--muted); }
+
+        .sh-threshold {
+            font-family: 'Space Mono', monospace; font-size: 0.76em; color: var(--muted);
+            background: rgba(14,165,233,0.08); border: 1px solid var(--border);
+            padding: 4px 10px; border-radius: 8px;
         }
 
-        @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .result-entry:hover {
-            transform: translateY(-5px);
-            background: rgba(14, 165, 233, 0.2);
-            border-color: rgba(14, 165, 233, 0.6);
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .result-query {
-            font-weight: 700;
-            color: #0ea5e9;
-            font-size: 1.1em;
-        }
-
-        .result-timestamp {
-            color: #94a3b8;
+        .sh-chevron {
+            color: var(--muted); transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
             font-size: 0.9em;
         }
+        .session-card.open .sh-chevron { transform: rotate(180deg); color: var(--cyan); }
 
-        .result-detail {
-            padding: 12px;
-            background: rgba(6, 182, 212, 0.1);
-            border-radius: 8px;
-            border-left: 3px solid #06b6d4;
-            margin: 12px 0;
-            color: #cbd5e1;
+        /* ── EXPAND BODY ── */
+        .session-body {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1);
+            border-top: 0px solid var(--border);
+        }
+        .session-card.open .session-body {
+            max-height: 3000px;
+            border-top: 1px solid var(--border);
         }
 
-        body.light-mode .result-detail {
-            color: #64748b;
+        .session-body-inner { padding: 24px 26px; display: flex; flex-direction: column; gap: 14px; }
+
+        /* no-match empty state inside session */
+        .no-match-inner {
+            text-align: center; padding: 30px 20px; color: var(--muted);
+        }
+        .no-match-inner i { font-size: 2em; margin-bottom: 10px; display: block; opacity: 0.4; }
+
+        /* ── PROFILE MATCH CARD (inner) ── */
+        .profile-card {
+            background: rgba(11,22,41,0.85); border-radius: 14px;
+            border: 1px solid rgba(14,165,233,0.18); overflow: hidden;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        body.light-mode .profile-card { background: rgba(248,250,252,0.9); border-color: #e2e8f0; }
+        .profile-card:hover { border-color: rgba(14,165,233,0.45); box-shadow: 0 8px 28px rgba(14,165,233,0.12); }
+
+        /* profile card top row */
+        .pc-top {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px; gap: 12px; flex-wrap: wrap;
         }
 
-        .match-list {
-            background: rgba(15, 23, 42, 0.5);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
+        .pc-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+        .pc-avatar {
+            width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, #1e3a8a, #0ea5e9);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1em; color: white;
         }
 
-        body.light-mode .match-list {
-            background: rgba(248, 250, 252, 0.8);
+        .pc-name { font-weight: 700; font-size: 0.95em; color: var(--text); }
+        .pc-id   { font-family: 'Space Mono', monospace; font-size: 0.7em; color: var(--muted); margin-top: 2px; }
+
+        .pc-score {
+            font-family: 'Space Mono', monospace; font-weight: 700; font-size: 0.95em;
+            padding: 5px 14px; border-radius: 20px; flex-shrink: 0;
+        }
+        .pc-score.definite { background: linear-gradient(135deg,#10b981,#059669); color:white; box-shadow: 0 4px 12px rgba(16,185,129,0.35); }
+        .pc-score.probable { background: linear-gradient(135deg,#0ea5e9,#0284c7); color:white; box-shadow: 0 4px 12px rgba(14,165,233,0.35); }
+        .pc-score.partial  { background: linear-gradient(135deg,#f59e0b,#d97706); color:white; box-shadow: 0 4px 12px rgba(245,158,11,0.35); }
+
+        .pc-expand-hint { font-size: 0.72em; color: var(--muted); flex-shrink: 0; display: flex; align-items: center; gap: 5px; }
+        .pc-chevron { transition: transform 0.3s ease; }
+        .profile-card.open .pc-chevron { transform: rotate(180deg); color: var(--cyan); }
+
+        /* profile card detail (expandable) */
+        .pc-detail {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+            border-top: 0px solid rgba(14,165,233,0.1);
+        }
+        .profile-card.open .pc-detail {
+            max-height: 600px;
+            border-top: 1px solid rgba(14,165,233,0.1);
         }
 
-        .match-item {
-            padding: 12px;
-            background: rgba(14, 165, 233, 0.15);
-            border-left: 3px solid #10b981;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
+        .pc-detail-inner {
+            padding: 16px 18px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+            gap: 0;
         }
 
-        .match-item:hover {
-            background: rgba(14, 165, 233, 0.25);
-            transform: translateX(5px);
+        .pc-field {
+            padding: 12px 14px; border-right: 1px solid rgba(14,165,233,0.07);
+            border-bottom: 1px solid rgba(14,165,233,0.07);
+            transition: background 0.2s;
         }
+        .pc-field:hover { background: rgba(14,165,233,0.04); }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 40px;
+        .pc-field-lbl {
+            font-size: 0.67em; color: var(--muted); text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 5px;
+            display: flex; align-items: center; gap: 5px;
         }
+        .pc-field-lbl i { color: var(--cyan); }
 
-        .empty-state i {
-            font-size: 4em;
-            color: #0ea5e9;
-            margin-bottom: 20px;
-        }
+        .pc-field-val { font-size: 0.88em; font-weight: 600; color: var(--text); }
+        .pc-field-val.green { color: var(--green); }
+        .pc-field-val.blue  { color: var(--cyan); }
+        .pc-field-val.amber { color: #f59e0b; }
 
-        .empty-state h2 {
-            color: #0ea5e9;
-            font-size: 1.8em;
-            margin-bottom: 10px;
+        .quality-bar { height: 4px; background: rgba(14,165,233,0.1); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+        .quality-fill { height: 100%; background: linear-gradient(90deg,#0ea5e9,#10b981); border-radius: 2px; }
+
+        /* tags row inside pc-detail */
+        .pc-tags { padding: 10px 18px; display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid rgba(14,165,233,0.07); }
+        .pc-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 20px; font-size: 0.7em; font-weight: 700;
         }
+        .tag-green { color:var(--green); background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); }
+        .tag-blue  { color:var(--cyan);  background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.3); }
+        .tag-amber { color:#f59e0b;      background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); }
+
+        /* empty state page */
+        .empty-state { text-align: center; padding: 80px 40px; }
+        .empty-state i { font-size: 4em; color: var(--cyan); margin-bottom: 20px; opacity: 0.5; }
+        .empty-state h2 { color: var(--cyan); font-size: 1.8em; margin-bottom: 10px; }
+        .empty-state p  { color: var(--muted); }
+        .empty-state a  {
+            display: inline-block; margin-top: 24px; padding: 14px 32px;
+            background: linear-gradient(135deg,#1e3a8a,#0ea5e9,#06b6d4);
+            color: white; text-decoration: none; border-radius: 12px;
+            font-weight: 700; transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(14,165,233,0.3);
+        }
+        .empty-state a:hover { transform: translateY(-3px); box-shadow: 0 16px 35px rgba(14,165,233,0.5); }
     </style>
 </head>
 <body{% if theme == 'light' %} class="light-mode"{% endif %}>
-    <div class="theme-toggle" id="themeToggle"><i class="fas fa-{% if theme == 'light' %}sun{% else %}moon{% endif %}"></i></div>
+
+    <div class="theme-toggle" id="themeToggle">
+        <i class="fas fa-{% if theme == 'light' %}sun{% else %}moon{% endif %}"></i>
+    </div>
 
     <div class="container">
         <div class="nav"><a href="/"><i class="fas fa-arrow-left"></i> Back to Dashboard</a></div>
 
-        <div class="card">
+        <div class="page-header">
             <h1><i class="fas fa-history"></i> Results History</h1>
-
-            {% if results|length == 0 %}
-            <div class="empty-state">
-                <div><i class="fas fa-inbox"></i></div>
-                <h2>No Results Yet</h2>
-                <p>Perform a match to see results here</p>
+            <p>All past DNA matching sessions — click any session to expand, click a profile to see full details</p>
+            {% if results|length > 0 %}
+            <div class="summary-chips">
+                <div class="chip chip-blue"><i class="fas fa-layer-group"></i> {{ results|length }} Sessions</div>
+                <div class="chip chip-green"><i class="fas fa-check-circle"></i>
+                    {{ results|selectattr('matches_found','gt',0)|list|length }} with Matches
+                </div>
+                <div class="chip chip-amber"><i class="fas fa-search"></i>
+                    {{ results|sum(attribute='matches_found') }} Total Matches
+                </div>
             </div>
-            {% else %}
-            {% for result in results|reverse %}
-            <div class="result-entry" style="animation-delay: {{ loop.index0 * 0.1 }}s;">
-                <div class="result-header">
-                    <div class="result-query"><i class="fas fa-dna"></i> {{ result.query_id }}</div>
-                    <div class="result-timestamp"><i class="fas fa-clock"></i> {{ result.timestamp }}</div>
-                </div>
-                <div class="result-detail">
-                    <strong>Threshold:</strong> {{ result.threshold }} | <strong>Matches:</strong> <span style="color: #10b981;">{{ result.matches_found }}</span>
-                </div>
-
-                {% if result.matches_found > 0 %}
-                <div class="match-list">
-                    <strong style="color: #0ea5e9;"><i class="fas fa-chart-line"></i> Top Matches:</strong>
-                    {% for match in result.results %}
-                    <div class="match-item">
-                        <strong>{{ match.target_id }}</strong> - {{ (match.score * 100)|round(2) }}%
-                        {% if match.encrypted %}<i class="fas fa-lock" style="color: #10b981;"></i>{% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            {% endfor %}
             {% endif %}
         </div>
+
+        {% if results|length == 0 %}
+        <div class="empty-state">
+            <div><i class="fas fa-inbox"></i></div>
+            <h2>No Results Yet</h2>
+            <p>Perform a DNA match to see results here</p>
+            <a href="/match"><i class="fas fa-search"></i> Start Matching</a>
+        </div>
+        {% else %}
+
+        {% for result in results|reverse %}
+        {% set idx = loop.index %}
+        <div class="session-card" id="session-{{ idx }}" style="animation-delay:{{ loop.index0 * 0.07 }}s;">
+
+            <!-- ALWAYS VISIBLE HEADER -->
+            <div class="session-header" onclick="toggleSession('session-{{ idx }}')">
+                <div class="sh-left">
+                    <div class="sh-index">#{{ loop.index }}</div>
+                    <div class="sh-info">
+                        <div class="sh-query">
+                            <i class="fas fa-dna"></i> {{ result.query_id }}
+                        </div>
+                        <div class="sh-time"><i class="fas fa-clock"></i> {{ result.timestamp }}</div>
+                    </div>
+                </div>
+                <div class="sh-right">
+                    <div class="sh-threshold">Threshold: {{ (result.threshold * 100)|round(0)|int }}%</div>
+                    {% if result.matches_found > 0 %}
+                    <div class="sh-badge found"><i class="fas fa-check-circle"></i> {{ result.matches_found }} Match{{ 'es' if result.matches_found > 1 else '' }}</div>
+                    {% else %}
+                    <div class="sh-badge none"><i class="fas fa-times-circle"></i> No Match</div>
+                    {% endif %}
+                    <i class="fas fa-chevron-down sh-chevron"></i>
+                </div>
+            </div>
+
+            <!-- EXPANDABLE BODY -->
+            <div class="session-body">
+                <div class="session-body-inner">
+                    {% if result.matches_found == 0 %}
+                    <div class="no-match-inner">
+                        <i class="fas fa-fingerprint"></i>
+                        <p>No profiles matched this query at {{ (result.threshold * 100)|round(0)|int }}% threshold.</p>
+                    </div>
+                    {% else %}
+                    {% for match in result.results %}
+                    {% set sc = match.score * 100 %}
+                    {% set score_class = 'definite' if match.status == 'DEFINITE MATCH' else ('probable' if match.status == 'PROBABLE MATCH' else 'partial') %}
+                    {% set quality = ((match.quality_score or 0) * 100)|round(0)|int %}
+
+                    <div class="profile-card" id="pc-{{ idx }}-{{ loop.index }}" onclick="toggleProfile('pc-{{ idx }}-{{ loop.index }}')">
+
+                        <!-- PROFILE TOP ROW -->
+                        <div class="pc-top">
+                            <div class="pc-left">
+                                <div class="pc-avatar">{{ (match.name or match.target_id)[0]|upper }}</div>
+                                <div>
+                                    <div class="pc-name">{{ match.name or match.target_id }}</div>
+                                    <div class="pc-id">{{ match.target_id }}</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                                <div class="pc-score {{ score_class }}">{{ sc|round(2) }}%</div>
+                                <div class="pc-expand-hint">
+                                    <span>Details</span>
+                                    <i class="fas fa-chevron-down pc-chevron"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- EXPANDABLE DETAIL -->
+                        <div class="pc-detail">
+                            <div class="pc-detail-inner">
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-user"></i> Full Name</div>
+                                    <div class="pc-field-val">{{ match.name or 'N/A' }}</div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-id-badge"></i> Profile ID</div>
+                                    <div class="pc-field-val blue" style="font-family:'Space Mono',monospace;font-size:0.82em;">{{ match.target_id }}</div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-globe"></i> Region</div>
+                                    <div class="pc-field-val blue">{{ match.region or 'N/A' }}</div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-tag"></i> Profile Type</div>
+                                    <div class="pc-field-val">{{ match.type or 'N/A' }}</div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-shield-alt"></i> Match Status</div>
+                                    <div class="pc-field-val {{ 'green' if score_class == 'definite' else ('blue' if score_class == 'probable' else 'amber') }}">
+                                        {{ match.status }}
+                                    </div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-percentage"></i> Similarity Score</div>
+                                    <div class="pc-field-val {{ 'green' if sc >= 95 else ('blue' if sc >= 70 else 'amber') }}" style="font-family:'Space Mono',monospace;">
+                                        {{ sc|round(2) }}%
+                                    </div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-circle"></i> Record Status</div>
+                                    <div class="pc-field-val green">{{ match.profile_status or 'ACTIVE' }}</div>
+                                </div>
+
+                                <div class="pc-field">
+                                    <div class="pc-field-lbl"><i class="fas fa-star"></i> Data Quality</div>
+                                    <div class="pc-field-val {{ 'green' if quality >= 90 else ('blue' if quality >= 70 else 'amber') }}">{{ quality }}%</div>
+                                    <div class="quality-bar">
+                                        <div class="quality-fill" style="width:{{ quality }}%"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="pc-tags">
+                                {% if match.verified %}
+                                <span class="pc-tag tag-green"><i class="fas fa-check-circle"></i> Verified</span>
+                                {% else %}
+                                <span class="pc-tag tag-amber"><i class="fas fa-clock"></i> Unverified</span>
+                                {% endif %}
+                                {% if match.encrypted %}
+                                <span class="pc-tag tag-blue"><i class="fas fa-lock"></i> Encrypted Match</span>
+                                {% endif %}
+                                <span class="pc-tag tag-blue"><i class="fas fa-dna"></i> 20 CODIS Loci</span>
+                                <span class="pc-tag tag-blue"><i class="fas fa-calendar-alt"></i> {{ result.timestamp[:10] }}</span>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+        {% endif %}
     </div>
 
     <script>
-        const themeToggle = document.getElementById('themeToggle');
-        themeToggle.addEventListener('click', function() {
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('click', function () {
             fetch('/toggle-theme').then(r => r.json()).then(data => {
                 document.body.classList.toggle('light-mode', data.theme === 'light');
-                themeToggle.innerHTML = data.theme === 'light' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+                this.innerHTML = data.theme === 'light' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
             });
         });
+
+        // Toggle session (outer card)
+        function toggleSession(id) {
+            const card = document.getElementById(id);
+            card.classList.toggle('open');
+        }
+
+        // Toggle individual profile card (inner)
+        function toggleProfile(id) {
+            event.stopPropagation(); // don't bubble to session
+            const card = document.getElementById(id);
+            card.classList.toggle('open');
+        }
+
+        // Auto-open first session if results exist
+        const firstSession = document.querySelector('.session-card');
+        if (firstSession) firstSession.classList.add('open');
     </script>
 </body>
 </html>
