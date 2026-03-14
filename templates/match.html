@@ -1011,7 +1011,10 @@
             <div class="verdict-sub"  id="verdictSub"></div>
             <div class="verdict-matches" id="verdictMatches"></div>
             <button class="verdict-btn" onclick="closeVerdictAndShow()">
-                <i class="fas fa-chart-bar"></i>&nbsp; View Full Report
+                <i class="fas fa-list-alt"></i>&nbsp; See Results
+            </button>
+            <button class="verdict-btn" onclick="window.location.href='/results#latest'" style="background:linear-gradient(135deg,#065f46,#10b981,#34d399);box-shadow:0 10px 30px rgba(16,185,129,0.35);">
+                <i class="fas fa-file-alt"></i>&nbsp; View Full Reports
             </button>
         </div>
     </div>
@@ -1271,71 +1274,66 @@
 
                 const d = pendingData;
                 if (d && d.success && d.results.length > 0) {
-                    let html = `<div style="padding:16px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:12px;margin-bottom:22px;border-left:4px solid #10b981;display:flex;align-items:center;gap:10px;">
-                        <i class="fas fa-check-circle" style="color:#10b981;font-size:1.2em;"></i>
-                        <strong>Found ${d.matches_found} match(es) in database</strong>
-                    </div>`;
+                    let html = `
+                    <!-- Summary banner -->
+                    <div style="padding:16px 20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:12px;margin-bottom:20px;border-left:4px solid #10b981;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fas fa-check-circle" style="color:#10b981;font-size:1.3em;"></i>
+                            <strong style="font-size:1em;">${d.matches_found} match${d.matches_found > 1 ? 'es' : ''} found</strong>
+                        </div>
+                        <a href="/results#latest" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:linear-gradient(135deg,#065f46,#10b981);color:white;text-decoration:none;border-radius:10px;font-weight:700;font-size:0.9em;box-shadow:0 6px 20px rgba(16,185,129,0.35);transition:all 0.25s ease-out;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 28px rgba(16,185,129,0.55)'" onmouseout="this.style.transform='';this.style.boxShadow='0 6px 20px rgba(16,185,129,0.35)'">
+                            <i class="fas fa-file-alt"></i> View Full Reports
+                        </a>
+                    </div>
+
+                    <!-- Simple match cards: Name + ID + Score only -->`;
 
                     d.results.forEach((r, i) => {
-                        const scoreClass = r.status === 'DEFINITE MATCH' ? 'definite' : r.status === 'PROBABLE MATCH' ? 'probable' : 'partial';
+                        const scoreClass  = r.status === 'DEFINITE MATCH' ? 'definite' : r.status === 'PROBABLE MATCH' ? 'probable' : 'partial';
                         const borderColor = r.status === 'DEFINITE MATCH' ? '#10b981' : r.status === 'PROBABLE MATCH' ? '#0ea5e9' : '#f59e0b';
-                        const quality = Math.round((r.quality_score || 0) * 100);
-                        const qualityColor = quality >= 90 ? 'green' : quality >= 70 ? 'blue' : 'amber';
+                        const statusColor = r.status === 'DEFINITE MATCH' ? '#10b981' : r.status === 'PROBABLE MATCH' ? '#0ea5e9' : '#f59e0b';
 
                         html += `
-                        <div class="result-card" style="border-left-color:${borderColor};animation-delay:${i*0.1}s;">
+                        <div class="result-card" style="border-left-color:${borderColor};animation-delay:${i*0.08}s;">
+                            <div class="rc-header" style="padding:18px 22px;">
+                                <!-- Avatar -->
+                                <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1e3a8a,#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1em;color:white;flex-shrink:0;">
+                                    ${(r.name || r.target_id)[0].toUpperCase()}
+                                </div>
 
-                            <div class="rc-header">
-                                <div class="rc-name-block">
-                                    <div class="rc-name"><i class="fas fa-user-circle" style="color:#0ea5e9;margin-right:8px;"></i>${r.name || 'Unknown'}</div>
-                                    <div class="rc-id"><i class="fas fa-fingerprint" style="margin-right:4px;opacity:0.5;"></i>${r.target_id}</div>
-                                </div>
-                                <div class="rc-score-wrap">
-                                    <div class="rc-score ${scoreClass}">${(r.score * 100).toFixed(2)}%</div>
-                                </div>
-                            </div>
-
-                            <div class="rc-details">
-                                <div class="rc-field">
-                                    <div class="rc-field-label"><i class="fas fa-map-marker-alt"></i> Address</div>
-                                    <div class="rc-field-value">${r.address || 'N/A'}</div>
-                                </div>
-                                <div class="rc-field">
-                                    <div class="rc-field-label"><i class="fas fa-city"></i> City</div>
-                                    <div class="rc-field-value blue">${r.city || 'N/A'}</div>
-                                </div>
-                                <div class="rc-field">
-                                    <div class="rc-field-label"><i class="fas fa-flag"></i> Country</div>
-                                    <div class="rc-field-value blue">${getFlag(r.country || r.region)} ${r.country || r.region || 'N/A'}</div>
-                                </div>
-                                <div class="rc-field">
-                                    <div class="rc-field-label"><i class="fas fa-tag"></i> Profile Type</div>
-                                    <div class="rc-field-value">${r.type || 'N/A'}</div>
-                                </div>
-                                <div class="rc-field">
-                                    <div class="rc-field-label"><i class="fas fa-shield-alt"></i> Match Status</div>
-                                    <div class="rc-field-value ${scoreClass === 'definite' ? 'green' : scoreClass === 'probable' ? 'blue' : 'amber'}">${r.status}</div>
-                                </div>
-                                <div class="rc-field">
-                                    <div class="rc-field-label"><i class="fas fa-star"></i> Data Quality</div>
-                                    <div class="rc-field-value ${qualityColor}">${quality}%</div>
-                                    <div class="quality-bar-wrap">
-                                        <div class="quality-bar-fill" style="width:${quality}%"></div>
+                                <!-- Name + ID -->
+                                <div class="rc-name-block" style="flex:1;margin-left:14px;">
+                                    <div class="rc-name" style="font-size:1.05em;">
+                                        <i class="fas fa-user-circle" style="color:#0ea5e9;margin-right:7px;"></i>${r.name || 'Unknown'}
+                                    </div>
+                                    <div class="rc-id" style="margin-top:4px;">
+                                        <i class="fas fa-fingerprint" style="margin-right:4px;opacity:0.5;"></i>${r.target_id}
+                                    </div>
+                                    <div style="margin-top:5px;font-size:0.75em;color:${statusColor};font-weight:700;letter-spacing:0.5px;">
+                                        <i class="fas fa-circle" style="font-size:0.6em;margin-right:5px;"></i>${r.status}
                                     </div>
                                 </div>
-                                <div class="rc-field">
-                                    <div class="rc-field-label"><i class="fas fa-info-circle"></i> Record Status</div>
-                                    <div class="rc-field-value green">${r.profile_status || 'ACTIVE'}</div>
-                                </div>
-                            </div>
 
-                            <div class="rc-footer">
-                                ${r.verified ? '<span class="rc-tag green"><i class="fas fa-check-circle"></i> Verified</span>' : '<span class="rc-tag amber"><i class="fas fa-clock"></i> Unverified</span>'}
-                                ${r.encrypted ? '<span class="rc-tag blue"><i class="fas fa-lock"></i> Encrypted Match</span>' : ''}
-                                <span class="rc-tag blue"><i class="fas fa-dna"></i> 20 CODIS Loci</span>
+                                <!-- Score badge -->
+                                <div class="rc-score-wrap">
+                                    <div class="rc-score ${scoreClass}" style="font-size:1.05em;padding:8px 18px;">
+                                        ${(r.score * 100).toFixed(2)}%
+                                    </div>
+                                </div>
                             </div>
                         </div>`;
                     });
+
+                    // Bottom "View Full Reports" button
+                    html += `
+                    <div style="text-align:center;margin-top:24px;">
+                        <a href="/results#latest" style="display:inline-flex;align-items:center;gap:10px;padding:14px 36px;background:linear-gradient(135deg,#1e3a8a,#0ea5e9,#06b6d4);color:white;text-decoration:none;border-radius:12px;font-weight:700;font-size:1em;box-shadow:0 10px 30px rgba(14,165,233,0.35);transition:all 0.25s ease-out;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 18px 40px rgba(14,165,233,0.55)'" onmouseout="this.style.transform='';this.style.boxShadow='0 10px 30px rgba(14,165,233,0.35)'">
+                            <i class="fas fa-file-alt"></i> View Full Reports
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <p style="margin-top:10px;font-size:0.82em;color:#64748b;">Address, city, country, quality score aur sabhi details wahan milenge</p>
+                    </div>`;
+
                     content.innerHTML = html;
                 } else {
                     content.innerHTML = `<div style="text-align:center;padding:30px;color:#cbd5e1;">

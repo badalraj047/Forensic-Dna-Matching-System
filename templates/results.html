@@ -537,7 +537,15 @@
 
         // Auto-open first session if results exist
         const firstSession = document.querySelector('.session-card');
-        if (firstSession) firstSession.classList.add('open');
+        if (firstSession) {
+            firstSession.classList.add('open');
+            // Agar URL mein #latest hai (match page se aaya hai) toh scroll bhi karo
+            if (window.location.hash === '#latest') {
+                setTimeout(() => {
+                    firstSession.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+        }
     </script>
 </body>
 </html>
