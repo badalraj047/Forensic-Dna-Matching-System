@@ -2,36 +2,42 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
+import io
+import re
+import random
+import secrets
 from datetime import datetime
 from pathlib import Path
-import secrets
-import random
-import re
-import io
+
+# ─── Import from project modules (no duplication) ───
+from matcher import (
+    CODIS_LOCI, ALLELE_RANGES,
+    calculate_tanabe_score, calculate_tanabe_score_simple,
+    calculate_kinship_score, calculate_rmp, full_match_analysis,
+)
+from encryption import DNAEncryption
+
+# ═══════════════════════════════════════════════
+# Flask app setup
+# ═══════════════════════════════════════════════
 
 app = Flask(__name__)
 
-# ===============================
-# Security / session configuration
-# ===============================
+
 def _load_or_create_secret_key() -> str:
-    """Load SECRET_KEY from env, else from secret_key.txt, else generate one."""
     env_key = os.environ.get('SECRET_KEY', '').strip()
     if len(env_key) >= 32:
         return env_key
-
     key_file = Path('secret_key.txt')
     try:
         if key_file.exists():
             file_key = key_file.read_text(encoding='utf-8').strip()
             if len(file_key) >= 32:
                 return file_key
-
         generated = secrets.token_hex(32)
         key_file.write_text(generated, encoding='utf-8')
         return generated
     except Exception:
-        # Last-resort fallback (non-persistent)
         return secrets.token_hex(32)
 
 
@@ -41,46 +47,29 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() == 'true'
 
 
-# ===============================
-# In-memory storage with persistence
-# ===============================
+# ═══════════════════════════════════════════════
+# In-memory database + file persistence
+# ═══════════════════════════════════════════════
+
 DATABASE = {
     'profiles': [],
     'encrypted_profiles': [],
     'match_results': [],
     'notifications': [],
-    'users': []
+    'users': [],
 }
 
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE_FILE = os.environ.get('DATABASE_FILE', str(BASE_DIR / 'profiles_database_realistic_10000.json'))
 USERS_FILE = os.environ.get('USERS_FILE', str(BASE_DIR / 'users_database.json'))
 
+crypto = DNAEncryption()
 
-# CODIS constants used across routes
-CODIS_LOCI = [
-    'CSF1PO', 'D3S1358', 'D5S818', 'D7S820', 'D8S1179',
-    'D13S317', 'D16S539', 'D18S51', 'D21S11', 'FGA',
-    'TH01', 'TPOX', 'vWA', 'D1S1656', 'D2S441',
-    'D2S1338', 'D10S1248', 'D12S391', 'D19S433', 'D22S1045'
-]
-
-ALLELE_RANGES = {
-    'CSF1PO': (6, 16), 'D3S1358': (12, 20), 'D5S818': (7, 16),
-    'D7S820': (6, 15), 'D8S1179': (8, 19), 'D13S317': (8, 16),
-    'D16S539': (5, 16), 'D18S51': (9, 27), 'D21S11': (24, 38),
-    'FGA': (17, 30), 'TH01': (4, 11), 'TPOX': (6, 13),
-    'vWA': (11, 21), 'D1S1656': (9, 20), 'D2S441': (8, 17),
-    'D2S1338': (15, 28), 'D10S1248': (8, 19), 'D12S391': (15, 26),
-    'D19S433': (9, 17), 'D22S1045': (8, 19)
-}
-
-
-# ===============================
+# ═══════════════════════════════════════════════
 # Persistence helpers
-# ===============================
+# ═══════════════════════════════════════════════
+
 def load_users_from_file() -> bool:
-    """Load users from persistent JSON file."""
     global DATABASE
     if os.path.exists(USERS_FILE):
         try:
@@ -91,18 +80,16 @@ def load_users_from_file() -> bool:
             return True
         except Exception as e:
             print(f"⚠ Error loading users: {e}")
-            return False
     return False
 
 
 def save_users_to_file() -> bool:
-    """Persist users to JSON file."""
     try:
         data = {
             'version': '1.1',
             'updated_at': datetime.now().isoformat(),
             'total_users': len(DATABASE['users']),
-            'users': DATABASE['users']
+            'users': DATABASE['users'],
         }
         with open(USERS_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2)
@@ -113,7 +100,6 @@ def save_users_to_file() -> bool:
 
 
 def load_database_from_file() -> bool:
-    """Load profiles from persistent JSON file."""
     global DATABASE
     if os.path.exists(DATABASE_FILE):
         try:
@@ -124,19 +110,17 @@ def load_database_from_file() -> bool:
             return True
         except Exception as e:
             print(f"⚠ Error loading database: {e}")
-            return False
     return False
 
 
 def save_database_to_file() -> bool:
-    """Persist profiles to JSON file."""
     try:
         data = {
             'version': '2.1',
             'updated_at': datetime.now().isoformat(),
             'total_profiles': len(DATABASE['profiles']),
             'codis_loci': CODIS_LOCI,
-            'profiles': DATABASE['profiles']
+            'profiles': DATABASE['profiles'],
         }
         with open(DATABASE_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2)
@@ -146,9 +130,22 @@ def save_database_to_file() -> bool:
         return False
 
 
-# ===============================
+def rebuild_encrypted_profiles() -> int:
+    encrypted = []
+    for p in DATABASE['profiles']:
+        try:
+            if 'id' in p and 'markers' in p:
+                encrypted.append(crypto.encrypt_profile(p))
+        except Exception:
+            continue
+    DATABASE['encrypted_profiles'] = encrypted
+    return len(encrypted)
+
+
+# ═══════════════════════════════════════════════
 # Validation helpers
-# ===============================
+# ═══════════════════════════════════════════════
+
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 
@@ -157,16 +154,9 @@ def is_valid_email(email: str) -> bool:
 
 
 def normalize_markers(markers: dict, require_all_loci: bool = False) -> dict:
-    """
-    Normalize markers -> {locus: [int, int]}
-    - requires list of length 2 for each provided locus
-    - if require_all_loci=True, all CODIS loci must be present
-    """
     if not isinstance(markers, dict) or not markers:
         raise ValueError("Markers must be a non-empty object")
-
     normalized = {}
-
     for locus, alleles in markers.items():
         if not isinstance(alleles, list) or len(alleles) != 2:
             raise ValueError(f"Locus {locus}: each marker must have exactly 2 alleles")
@@ -175,148 +165,66 @@ def normalize_markers(markers: dict, require_all_loci: bool = False) -> dict:
         except Exception as ex:
             raise ValueError(f"Locus {locus}: alleles must be integers") from ex
         normalized[locus] = sorted([a1, a2])
-
     if require_all_loci:
         missing = [l for l in CODIS_LOCI if l not in normalized]
         if missing:
-            raise ValueError(f"Missing required CODIS loci: {', '.join(missing[:5])}{'...' if len(missing) > 5 else ''}")
-
+            raise ValueError(f"Missing required CODIS loci: {', '.join(missing[:5])}")
     return normalized
 
 
 def normalize_profile(profile_data: dict, require_all_loci: bool = False) -> dict:
     if not isinstance(profile_data, dict):
         raise ValueError("Profile must be a JSON object")
-
-    profile_id = str(profile_data.get('id', '')).strip()
-    if not profile_id:
+    pid = str(profile_data.get('id', '')).strip()
+    if not pid:
         raise ValueError("Profile id is required")
-
     markers = normalize_markers(profile_data.get('markers'), require_all_loci=require_all_loci)
+    out = dict(profile_data)
+    out['id'] = pid
+    out['markers'] = markers
+    out['region'] = str(profile_data.get('region', 'USA')).strip() or 'USA'
+    out['timestamp'] = profile_data.get('timestamp', datetime.now().isoformat())
+    out['type'] = profile_data.get('type', 'SYNTHETIC')
+    return out
 
-    normalized = dict(profile_data)
-    normalized['id'] = profile_id
-    normalized['markers'] = markers
-    normalized['region'] = str(profile_data.get('region', 'USA')).strip() or 'USA'
-    normalized['timestamp'] = profile_data.get('timestamp', datetime.now().isoformat())
-    normalized['type'] = profile_data.get('type', 'SYNTHETIC')
-    return normalized
 
-
-# ===============================
+# ═══════════════════════════════════════════════
 # User auth helpers
-# ===============================
+# ═══════════════════════════════════════════════
+
 def find_user_by_email(email: str):
-    for user in DATABASE['users']:
-        if user['email'].lower() == email.lower():
-            return user
+    for u in DATABASE['users']:
+        if u['email'].lower() == email.lower():
+            return u
     return None
 
 
-def register_user(email: str, password: str, username: str):
+def register_user(email, password, username):
     if find_user_by_email(email):
         return {'success': False, 'error': 'Email already registered'}
-
     user = {
         'id': len(DATABASE['users']) + 1,
-        'email': email,
-        'username': username,
+        'email': email, 'username': username,
         'password': generate_password_hash(password),
         'created_at': datetime.now().isoformat(),
-        'profiles_count': 0
+        'profiles_count': 0,
     }
     DATABASE['users'].append(user)
     return {'success': True, 'message': 'Registration successful! Please login.'}
 
 
-def verify_login(email: str, password: str):
+def verify_login(email, password):
     user = find_user_by_email(email)
     if user and check_password_hash(user['password'], password):
         return {'success': True, 'user': user}
     return {'success': False, 'error': 'Invalid email or password'}
 
 
-# ===============================
-# Crypto + similarity
-# ===============================
-class DNAEncryption:
-    def __init__(self):
-        self.key = os.environ.get("DNA_ENCRYPTION_KEY", "forensic_key_2025")
+# ═══════════════════════════════════════════════
+# Match result builder (shared by /match and /crime-scene)
+# ═══════════════════════════════════════════════
 
-    def encrypt_profile(self, profile: dict):
-        import hashlib
-
-        encrypted = {
-            'id': profile['id'],
-            'encrypted_markers': {},
-            'is_encrypted': True,
-            'timestamp': datetime.now().isoformat(),
-            'region': profile.get('region', 'USA')
-        }
-
-        for locus, alleles in profile['markers'].items():
-            encrypted['encrypted_markers'][locus] = [
-                hashlib.sha256(f"{self.key}:{locus}:{a}".encode()).hexdigest()
-                for a in alleles
-            ]
-
-        return encrypted
-
-    def compute_similarity_encrypted(self, profile1_enc: dict, profile2_enc: dict) -> float:
-        """
-        Deterministic hash-comparison score.
-        NOTE: This is hash-based secure matching demo, not true homomorphic encryption.
-        """
-        total_alleles = 0
-        shared_alleles = 0
-
-        for locus, alleles1 in profile1_enc.get('encrypted_markers', {}).items():
-            alleles2 = profile2_enc.get('encrypted_markers', {}).get(locus)
-            if not alleles2:
-                continue
-
-            set1 = set(alleles1)
-            set2 = set(alleles2)
-            shared = len(set1.intersection(set2))
-
-            shared_alleles += shared
-            total_alleles += len(set1) + len(set2)
-
-        if total_alleles == 0:
-            return 0.0
-        return round((2 * shared_alleles) / total_alleles, 4)
-
-
-crypto = DNAEncryption()
-
-
-def calculate_tanabe_score(profile1: dict, profile2: dict) -> float:
-    shared_alleles = 0
-    total_alleles = 0
-
-    for locus in profile1.get('markers', {}):
-        if locus in profile2.get('markers', {}):
-            alleles1 = profile1['markers'][locus]
-            alleles2 = profile2['markers'][locus]
-
-            if not isinstance(alleles1, list):
-                alleles1 = list(alleles1)
-            if not isinstance(alleles2, list):
-                alleles2 = list(alleles2)
-
-            set1 = set(alleles1)
-            set2 = set(alleles2)
-            shared = len(set1.intersection(set2))
-
-            shared_alleles += shared
-            total_alleles += len(set1) + len(set2)
-
-    if total_alleles == 0:
-        return 0.0
-    return round((2 * shared_alleles) / total_alleles, 4)
-
-
-def classify_score(score: float, threshold: float) -> str:
+def _classify(score, threshold):
     if score >= 0.95:
         return 'DEFINITE MATCH'
     if score >= threshold:
@@ -326,55 +234,82 @@ def classify_score(score: float, threshold: float) -> str:
     return 'NO MATCH'
 
 
-def rebuild_encrypted_profiles() -> int:
-    """Rebuild encrypted profile list from plaintext profiles."""
-    encrypted_profiles = []
-    for profile in DATABASE['profiles']:
-        try:
-            if 'id' in profile and 'markers' in profile:
-                encrypted_profiles.append(crypto.encrypt_profile(profile))
-        except Exception:
-            continue
-    DATABASE['encrypted_profiles'] = encrypted_profiles
-    return len(encrypted_profiles)
+def build_match_result(query, target, score, threshold, use_encryption=False):
+    """Build a single match result dict with kinship + RMP."""
+    status = _classify(score, threshold)
+    region = target.get('region', 'General')
 
+    # Full analysis: locus detail + kinship + RMP
+    analysis = full_match_analysis(query, target, region=region)
 
-# ===============================
-# Notification helper
-# ===============================
-def add_notification(title: str, message: str):
-    notification = {
-        'id': len(DATABASE['notifications']) + 1,
-        'title': title,
-        'message': message,
-        'timestamp': datetime.now().isoformat()
+    return {
+        'target_id':       target['id'],
+        'name':            target.get('name', 'Unknown'),
+        'region':          target.get('region', 'N/A'),
+        'country':         target.get('country', 'N/A'),
+        'address':         target.get('address', 'N/A'),
+        'city':            target.get('city', 'N/A'),
+        'type':            target.get('type', 'N/A'),
+        'status':          status,
+        'profile_status':  target.get('status', 'N/A'),
+        'verified':        target.get('verified', False),
+        'quality_score':   target.get('quality_score', 0),
+        'score':           score,
+        'encrypted':       use_encryption,
+        # ── NEW: forensic analysis ──
+        'loci_details':    analysis['tanabe']['loci_details'],
+        'loci_compared':   analysis['tanabe']['loci_compared'],
+        'kinship':         {
+            'relationship':   analysis['kinship']['relationship'],
+            'ibs_mean':       analysis['kinship']['ibs_mean'],
+            'obligate_share': analysis['kinship']['obligate_share'],
+            'confidence':     analysis['kinship']['confidence'],
+        },
+        'rmp':             {
+            'formatted':   analysis['rmp']['rmp_formatted'],
+            'log10':       analysis['rmp']['log10_rmp'],
+            'loci_counted': analysis['rmp']['loci_counted'],
+        },
     }
-    DATABASE['notifications'].append(notification)
+
+
+# ═══════════════════════════════════════════════
+# Notifications
+# ═══════════════════════════════════════════════
+
+def add_notification(title: str, message: str):
+    n = {
+        'id': len(DATABASE['notifications']) + 1,
+        'title': title, 'message': message,
+        'timestamp': datetime.now().isoformat(),
+    }
+    DATABASE['notifications'].append(n)
     if len(DATABASE['notifications']) > 50:
         DATABASE['notifications'] = DATABASE['notifications'][-50:]
 
 
-# ===============================
-# Startup loading
-# ===============================
+# ═══════════════════════════════════════════════
+# Startup
+# ═══════════════════════════════════════════════
+
 load_users_from_file()
 load_database_from_file()
 rebuild_encrypted_profiles()
 
 
-# ===============================
-# Routes: auth + pages
-# ===============================
+# ═══════════════════════════════════════════════
+# Routes: pages & auth
+# ═══════════════════════════════════════════════
+
 @app.route('/')
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-
     theme = session.get('theme', 'dark')
     stats = {
         'total_profiles': len(DATABASE['profiles']),
         'encrypted_profiles': len(DATABASE['encrypted_profiles']),
-        'total_matches': len(DATABASE['match_results'])
+        'total_matches': len(DATABASE['match_results']),
     }
     return render_template('index.html', stats=stats, theme=theme)
 
@@ -388,7 +323,6 @@ def register():
             password = str(data.get('password', '')).strip()
             username = str(data.get('username', '')).strip()
             confirm_password = str(data.get('confirm_password', '')).strip()
-
             if not email or not password or not username:
                 return jsonify({'success': False, 'error': 'All fields required'}), 400
             if not is_valid_email(email):
@@ -397,7 +331,6 @@ def register():
                 return jsonify({'success': False, 'error': 'Password must be at least 6 characters'}), 400
             if password != confirm_password:
                 return jsonify({'success': False, 'error': 'Passwords do not match'}), 400
-
             result = register_user(email, password, username)
             if result['success']:
                 save_users_to_file()
@@ -405,7 +338,6 @@ def register():
             return jsonify(result), 409
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
-
     if 'user_id' in session:
         return redirect(url_for('index'))
     return render_template('register.html')
@@ -418,10 +350,8 @@ def login():
             data = request.get_json(silent=True) or {}
             email = str(data.get('email', '')).strip()
             password = str(data.get('password', '')).strip()
-
             if not email or not password:
                 return jsonify({'success': False, 'error': 'Email and password required'}), 400
-
             result = verify_login(email, password)
             if result['success']:
                 user = result['user']
@@ -429,16 +359,10 @@ def login():
                 session['email'] = user['email']
                 session['username'] = user['username']
                 session['theme'] = 'dark'
-                return jsonify({
-                    'success': True,
-                    'message': 'Login successful',
-                    'redirect': '/'
-                }), 200
-
+                return jsonify({'success': True, 'message': 'Login successful', 'redirect': '/'}), 200
             return jsonify(result), 401
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
-
     if 'user_id' in session:
         return redirect(url_for('index'))
     return render_template('login.html')
@@ -455,51 +379,23 @@ def profile_page():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     theme = session.get('theme', 'dark')
-    # Find user data
     user = next((u for u in DATABASE['users'] if u['id'] == session['user_id']), None)
     if not user:
         return redirect(url_for('index'))
-    # Count this user's activity
-    total_profiles = len(DATABASE['profiles'])
-    total_matches  = len(DATABASE['match_results'])
-    joined_date    = user.get('created_at', '')[:10] if user.get('created_at') else 'N/A'
+    joined_date = user.get('created_at', '')[:10] if user.get('created_at') else 'N/A'
     return render_template('profile.html',
-        theme=theme,
-        username=user['username'],
-        email=user['email'],
+        theme=theme, username=user['username'], email=user['email'],
         joined_date=joined_date,
-        total_profiles=total_profiles,
-        total_matches=total_matches,
-        user_id=user['id']
-    )
+        total_profiles=len(DATABASE['profiles']),
+        total_matches=len(DATABASE['match_results']),
+        user_id=user['id'])
 
 
 @app.route('/crime-scene')
 def crime_scene_page():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    theme = session.get('theme', 'dark')
-    return render_template('crime-scene.html', theme=theme)
-
-
-@app.route('/api/user', methods=['GET'])
-def get_user_info():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not logged in'}), 401
-
-    user = next((u for u in DATABASE['users'] if u['id'] == session['user_id']), None)
-    if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
-
-    return jsonify({
-        'success': True,
-        'user': {
-            'id': user['id'],
-            'email': user['email'],
-            'username': user['username'],
-            'profiles_count': user.get('profiles_count', 0)
-        }
-    })
+    return render_template('crime-scene.html', theme=session.get('theme', 'dark'))
 
 
 @app.route('/toggle-theme')
@@ -511,6 +407,24 @@ def toggle_theme():
     return jsonify({'theme': session['theme']})
 
 
+@app.route('/api/user', methods=['GET'])
+def get_user_info():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    user = next((u for u in DATABASE['users'] if u['id'] == session['user_id']), None)
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    return jsonify({'success': True, 'user': {
+        'id': user['id'], 'email': user['email'],
+        'username': user['username'],
+        'profiles_count': user.get('profiles_count', 0),
+    }})
+
+
+# ═══════════════════════════════════════════════
+# Generate profiles
+# ═══════════════════════════════════════════════
+
 @app.route('/generate', methods=['GET', 'POST'])
 def generate_profile():
     if 'user_id' not in session:
@@ -518,38 +432,24 @@ def generate_profile():
 
     if request.method == 'POST':
         try:
-            try:
-                count = int(request.form.get('count', 1))
-            except Exception:
-                count = 1
-
-            if count < 1 or count > 500:
-                return jsonify({'success': False, 'error': 'Count must be between 1 and 500'}), 400
-
+            count = max(1, min(500, int(request.form.get('count', 1))))
             region = str(request.form.get('region', 'USA')).strip() or 'USA'
-
-            profiles_generated = []
             start_count = len(DATABASE['profiles'])
+            ids = []
 
             for i in range(count):
-                profile_id = f"{region}_{start_count + i + 1:06d}"
+                pid = f"{region}_{start_count + i + 1:06d}"
                 profile = {
-                    'id': profile_id,
-                    'markers': {},
-                    'timestamp': datetime.now().isoformat(),
-                    'type': 'SYNTHETIC',
-                    'region': region
+                    'id': pid, 'markers': {}, 'timestamp': datetime.now().isoformat(),
+                    'type': 'SYNTHETIC', 'region': region,
                 }
-
                 for locus in CODIS_LOCI:
-                    min_val, max_val = ALLELE_RANGES[locus]
-                    allele1 = random.randint(min_val, max_val)
-                    allele2 = random.randint(min_val, max_val)
-                    profile['markers'][locus] = sorted([int(allele1), int(allele2)])
+                    lo, hi = ALLELE_RANGES[locus]
+                    profile['markers'][locus] = sorted([random.randint(lo, hi), random.randint(lo, hi)])
 
                 DATABASE['profiles'].append(profile)
                 DATABASE['encrypted_profiles'].append(crypto.encrypt_profile(profile))
-                profiles_generated.append(profile_id)
+                ids.append(pid)
 
             user = next((u for u in DATABASE['users'] if u['id'] == session['user_id']), None)
             if user:
@@ -558,18 +458,16 @@ def generate_profile():
 
             save_database_to_file()
             add_notification('✨ Profiles Generated', f'Generated {count} profile(s) from {region}')
-
-            return jsonify({
-                'success': True,
-                'message': f'Generated {count} profile(s) from {region}',
-                'profile_ids': profiles_generated
-            })
+            return jsonify({'success': True, 'message': f'Generated {count} profile(s) from {region}', 'profile_ids': ids})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
-    theme = session.get('theme', 'dark')
-    return render_template('generate.html', theme=theme)
+    return render_template('generate.html', theme=session.get('theme', 'dark'))
 
+
+# ═══════════════════════════════════════════════
+# Upload profile
+# ═══════════════════════════════════════════════
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_profile():
@@ -578,51 +476,41 @@ def upload_profile():
 
     if request.method == 'POST':
         try:
-            profile_data = request.get_json(silent=True) or {}
-            if 'id' not in profile_data or 'markers' not in profile_data:
+            data = request.get_json(silent=True) or {}
+            if 'id' not in data or 'markers' not in data:
                 return jsonify({'success': False, 'error': 'Invalid profile format'}), 400
-
-            for locus in profile_data['markers']:
-                alleles = profile_data['markers'][locus]
+            for locus in data['markers']:
+                alleles = data['markers'][locus]
                 if not isinstance(alleles, list) or len(alleles) != 2:
                     return jsonify({'success': False, 'error': 'Each marker must have 2 alleles'}), 400
-                profile_data['markers'][locus] = [int(a) for a in alleles]
+                data['markers'][locus] = [int(a) for a in alleles]
+            if not data.get('region'):
+                data['region'] = 'USA'
+            store = bool(data.pop('store_in_database', False))
+            session['last_uploaded_profile'] = data
 
-            if 'region' not in profile_data or not profile_data['region']:
-                profile_data['region'] = 'USA'
-
-            store_in_database = bool(profile_data.get('store_in_database', False))
-            profile_data.pop('store_in_database', None)
-
-            session['last_uploaded_profile'] = profile_data
-
-            if store_in_database:
-                if any(p.get('id') == profile_data['id'] for p in DATABASE['profiles']):
-                    return jsonify({'success': False, 'error': 'Profile ID already exists in database'}), 409
-
-                DATABASE['profiles'].append(profile_data)
-                encrypted = crypto.encrypt_profile(profile_data)
-                DATABASE['encrypted_profiles'].append(encrypted)
+            if store:
+                if any(p.get('id') == data['id'] for p in DATABASE['profiles']):
+                    return jsonify({'success': False, 'error': 'Profile ID already exists'}), 409
+                DATABASE['profiles'].append(data)
+                DATABASE['encrypted_profiles'].append(crypto.encrypt_profile(data))
                 save_database_to_file()
-                add_notification('📤 Profile Uploaded', f'Profile {profile_data["id"]} uploaded and stored in database')
-                message = 'Profile uploaded, encrypted, and stored in database'
+                add_notification('📤 Profile Uploaded', f'Profile {data["id"]} stored in database')
+                msg = 'Profile uploaded, encrypted, and stored in database'
             else:
-                add_notification('🧪 Query Sample Uploaded', f'Profile {profile_data["id"]} uploaded for matching (not stored in database)')
-                message = 'Profile uploaded for matching only (not added to dataset)'
+                add_notification('🧪 Query Sample Uploaded', f'Profile {data["id"]} uploaded for matching')
+                msg = 'Profile uploaded for matching only (not added to dataset)'
 
-            return jsonify({
-                'success': True,
-                'message': message,
-                'profile_id': profile_data['id'],
-                'stored_in_database': store_in_database
-            })
-
+            return jsonify({'success': True, 'message': msg, 'profile_id': data['id'], 'stored_in_database': store})
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
-    theme = session.get('theme', 'dark')
-    return render_template('upload.html', theme=theme)
+    return render_template('upload.html', theme=session.get('theme', 'dark'))
 
+
+# ═══════════════════════════════════════════════
+# Match profiles — NOW WITH LOCUS DETAIL + KINSHIP + RMP
+# ═══════════════════════════════════════════════
 
 @app.route('/match', methods=['GET', 'POST'])
 def match_profiles():
@@ -632,12 +520,10 @@ def match_profiles():
     if request.method == 'POST':
         try:
             query_id = request.form.get('query_id')
-            threshold = float(request.form.get('threshold', 0.70))
-            threshold = max(0.50, min(1.0, threshold))
+            threshold = max(0.50, min(1.0, float(request.form.get('threshold', 0.70))))
             use_encryption = request.form.get('use_encryption') == 'true'
             filter_region = request.form.get('filter_region') == 'true'
 
-            # Query source: dropdown profile OR last uploaded (not stored) sample
             if query_id == '__LAST_UPLOADED__':
                 query_profile = session.get('last_uploaded_profile')
             else:
@@ -646,69 +532,44 @@ def match_profiles():
             if not query_profile:
                 return jsonify({'success': False, 'error': 'Query profile not found'}), 404
 
-            query_profile_id = query_profile.get('id')
+            qid = query_profile.get('id')
             results = []
 
-            for target_profile in DATABASE['profiles']:
-                # Self profile skip -> 100% self-match bug fix
-                if target_profile.get('id') == query_profile_id:
+            for target in DATABASE['profiles']:
+                if target.get('id') == qid:
+                    continue
+                if filter_region and query_profile.get('region') != target.get('region'):
                     continue
 
-                if filter_region and query_profile.get('region') != target_profile.get('region'):
-                    continue
-
-                score = calculate_tanabe_score(query_profile, target_profile)
-
-                if score >= 0.95:
-                    status = 'DEFINITE MATCH'
-                elif score >= threshold:
-                    status = 'PROBABLE MATCH'
-                elif score >= 0.50:
-                    status = 'PARTIAL MATCH'
-                else:
-                    status = 'NO MATCH'
+                score = calculate_tanabe_score_simple(query_profile, target)
 
                 if score >= threshold:
-                    results.append({
-                        'target_id':      target_profile['id'],
-                        'name':           target_profile.get('name', 'Unknown'),
-                        'region':         target_profile.get('region', 'N/A'),
-                        'country':        target_profile.get('country', 'N/A'),
-                        'address':        target_profile.get('address', 'N/A'),
-                        'city':           target_profile.get('city', 'N/A'),
-                        'type':           target_profile.get('type', 'N/A'),
-                        'status':         status,
-                        'profile_status': target_profile.get('status', 'N/A'),
-                        'verified':       target_profile.get('verified', False),
-                        'quality_score':  target_profile.get('quality_score', 0),
-                        'score':          score,
-                        'encrypted':      use_encryption,
-                    })
+                    results.append(build_match_result(
+                        query_profile, target, score, threshold, use_encryption
+                    ))
 
             results.sort(key=lambda x: x['score'], reverse=True)
+            results = results[:10]
 
-            match_result = {
-                'query_id': query_profile_id,
+            match_record = {
+                'query_id': qid,
                 'timestamp': datetime.now().isoformat(),
                 'threshold': threshold,
                 'matches_found': len(results),
-                'results': results[:10]
+                'results': results,
             }
+            DATABASE['match_results'].append(match_record)
 
-            DATABASE['match_results'].append(match_result)
-
-            matches_count = len(results)
-            if matches_count > 0:
-                add_notification('🔍 Match Found!', f'{matches_count} profile(s) matched!')
+            if len(results) > 0:
+                add_notification('🔍 Match Found!', f'{len(results)} profile(s) matched!')
 
             return jsonify({
                 'success': True,
-                'query_id': query_profile_id,
-                'matches_found': matches_count,
-                'results': results[:10],
-                'message': f'Found {matches_count} match(es)'
+                'query_id': qid,
+                'matches_found': len(results),
+                'results': results,
+                'message': f'Found {len(results)} match(es)',
             })
-
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -717,76 +578,15 @@ def match_profiles():
     last_uploaded_profile_id = None
     if session.get('last_uploaded_profile'):
         last_uploaded_profile_id = session['last_uploaded_profile'].get('id')
-
-    return render_template(
-        'match.html',
-        profiles=available_profiles,
-        theme=theme,
-        last_uploaded_profile_id=last_uploaded_profile_id
-    )
+    return render_template('match.html',
+        profiles=available_profiles, theme=theme,
+        last_uploaded_profile_id=last_uploaded_profile_id)
 
 
-@app.route('/results')
-def view_results():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+# ═══════════════════════════════════════════════
+# Crime scene matching — NOW WITH KINSHIP + RMP
+# ═══════════════════════════════════════════════
 
-    theme = session.get('theme', 'dark')
-    return render_template('results.html', results=DATABASE['match_results'], theme=theme)
-
-
-@app.route('/api/profiles', methods=['GET'])
-def get_profiles():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not logged in'}), 401
-    return jsonify({
-        'success': True,
-        'count': len(DATABASE['profiles']),
-        'profiles': DATABASE['profiles']
-    })
-
-
-@app.route('/api/stats', methods=['GET'])
-def get_stats():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not logged in'}), 401
-    return jsonify({
-        'total_profiles': len(DATABASE['profiles']),
-        'encrypted_profiles': len(DATABASE['encrypted_profiles']),
-        'total_matches': len(DATABASE['match_results']),
-        'last_update': datetime.now().isoformat()
-    })
-
-
-@app.route('/api/notifications', methods=['GET'])
-def get_notifications():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not logged in'}), 401
-    seen_ids = session.get('seen_notification_ids', [])
-    notifications_with_status = []
-    for n in DATABASE['notifications']:
-        n_copy = dict(n)
-        n_copy['seen'] = n['id'] in seen_ids
-        notifications_with_status.append(n_copy)
-    unread_count = sum(1 for n in notifications_with_status if not n['seen'])
-    return jsonify({
-        'success': True,
-        'notifications': notifications_with_status,
-        'unread_count': unread_count
-    })
-
-
-@app.route('/api/notifications/mark-seen', methods=['POST'])
-def mark_notifications_seen():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not logged in'}), 401
-    all_ids = [n['id'] for n in DATABASE['notifications']]
-    session['seen_notification_ids'] = all_ids
-    session.modified = True
-    return jsonify({'success': True})
-
-
-# ===== CRIME SCENE MATCHING =====
 @app.route('/api/crime-scene-match', methods=['POST'])
 def crime_scene_match():
     if 'user_id' not in session:
@@ -797,29 +597,25 @@ def crime_scene_match():
         if 'markers' not in crime_sample:
             return jsonify({'success': False, 'error': 'Invalid crime scene sample'}), 400
 
-        # Partial markers are allowed for crime-scene input
-        crime_markers = normalize_markers(crime_sample['markers'], require_all_loci=False)
-        crime_sample['markers'] = crime_markers
-
-        if 'id' not in crime_sample or not str(crime_sample.get('id', '')).strip():
+        crime_sample['markers'] = normalize_markers(crime_sample['markers'], require_all_loci=False)
+        if not str(crime_sample.get('id', '')).strip():
             crime_sample['id'] = 'CRIME_SCENE_' + datetime.now().strftime('%Y%m%d_%H%M%S')
 
         results = []
         for profile in DATABASE['profiles']:
-            score = calculate_tanabe_score(crime_sample, profile)
+            score = calculate_tanabe_score_simple(crime_sample, profile)
 
             if score >= 0.95:
-                status = 'DEFINITE MATCH'
-                confidence = 'VERY HIGH'
+                status, confidence = 'DEFINITE MATCH', 'VERY HIGH'
             elif score >= 0.80:
-                status = 'PROBABLE MATCH'
-                confidence = 'HIGH'
+                status, confidence = 'PROBABLE MATCH', 'HIGH'
             elif score >= 0.50:
-                status = 'POSSIBLE MATCH'
-                confidence = 'MEDIUM'
+                status, confidence = 'POSSIBLE MATCH', 'MEDIUM'
             else:
-                status = 'NO MATCH'
-                confidence = 'LOW'
+                status, confidence = 'NO MATCH', 'LOW'
+
+            # Full analysis for top candidates
+            analysis = full_match_analysis(crime_sample, profile, region=profile.get('region', 'General'))
 
             results.append({
                 'suspect_id': profile.get('id', 'Unknown'),
@@ -830,41 +626,143 @@ def crime_scene_match():
                 'status': status,
                 'confidence': confidence,
                 'region': profile.get('region', 'Unknown'),
-                'case_type': profile.get('case_type', 'Unknown')
+                'case_type': profile.get('case_type', 'Unknown'),
+                # ── NEW ──
+                'loci_details': analysis['tanabe']['loci_details'],
+                'loci_compared': analysis['tanabe']['loci_compared'],
+                'kinship': {
+                    'relationship': analysis['kinship']['relationship'],
+                    'ibs_mean': analysis['kinship']['ibs_mean'],
+                    'obligate_share': analysis['kinship']['obligate_share'],
+                    'confidence': analysis['kinship']['confidence'],
+                },
+                'rmp': {
+                    'formatted': analysis['rmp']['rmp_formatted'],
+                    'log10': analysis['rmp']['log10_rmp'],
+                },
             })
 
         results.sort(key=lambda x: x['similarity_score'], reverse=True)
 
-        definite_count = len([r for r in results if r['similarity_score'] >= 0.95])
-        probable_count = len([r for r in results if 0.80 <= r['similarity_score'] < 0.95])
+        definite = sum(1 for r in results if r['similarity_score'] >= 0.95)
+        probable = sum(1 for r in results if 0.80 <= r['similarity_score'] < 0.95)
 
         match_record = {
             'crime_sample_id': crime_sample['id'],
             'timestamp': datetime.now().isoformat(),
             'total_profiles_searched': len(DATABASE['profiles']),
-            'definite_matches': definite_count,
-            'probable_matches': probable_count,
-            'top_10_matches': results[:10]
+            'definite_matches': definite,
+            'probable_matches': probable,
+            'top_10_matches': results[:10],
         }
         DATABASE['match_results'].append(match_record)
 
-        if definite_count > 0:
-            add_notification('🚨 CRIME SCENE MATCH FOUND!', f"{definite_count} definite match(es)!")
+        if definite > 0:
+            add_notification('🚨 CRIME SCENE MATCH!', f"{definite} definite match(es)!")
 
         include_all = bool(crime_sample.get('include_all', False))
         return jsonify({
             'success': True,
             'crime_sample_id': crime_sample['id'],
             'total_profiles_searched': len(DATABASE['profiles']),
-            'definite_matches': definite_count,
-            'probable_matches': probable_count,
+            'definite_matches': definite,
+            'probable_matches': probable,
             'top_10_suspects': results[:10],
-            'all_results': results if include_all else []
+            'all_results': results if include_all else [],
         }), 200
+
     except ValueError as ve:
         return jsonify({'success': False, 'error': str(ve)}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ═══════════════════════════════════════════════
+# NEW: RMP + Kinship API endpoints
+# ═══════════════════════════════════════════════
+
+@app.route('/api/rmp/<profile_id>', methods=['GET'])
+def get_rmp(profile_id):
+    """Get Random Match Probability for a specific profile."""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    profile = next((p for p in DATABASE['profiles'] if p['id'] == profile_id), None)
+    if not profile:
+        return jsonify({'success': False, 'error': 'Profile not found'}), 404
+    region = profile.get('region', 'General')
+    rmp = calculate_rmp(profile, region=region)
+    return jsonify({'success': True, 'profile_id': profile_id, 'rmp': rmp})
+
+
+@app.route('/api/kinship', methods=['POST'])
+def get_kinship():
+    """Compare two profiles for familial relationship."""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    data = request.get_json(silent=True) or {}
+    id1 = data.get('profile1_id')
+    id2 = data.get('profile2_id')
+    p1 = next((p for p in DATABASE['profiles'] if p['id'] == id1), None)
+    p2 = next((p for p in DATABASE['profiles'] if p['id'] == id2), None)
+    if not p1 or not p2:
+        return jsonify({'success': False, 'error': 'One or both profiles not found'}), 404
+    result = calculate_kinship_score(p1, p2)
+    return jsonify({'success': True, 'profile1': id1, 'profile2': id2, 'kinship': result})
+
+
+# ═══════════════════════════════════════════════
+# Results, stats, notifications, import/export
+# ═══════════════════════════════════════════════
+
+@app.route('/results')
+def view_results():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('results.html', results=DATABASE['match_results'],
+                           theme=session.get('theme', 'dark'))
+
+
+@app.route('/api/profiles', methods=['GET'])
+def get_profiles():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    return jsonify({'success': True, 'count': len(DATABASE['profiles']),
+                    'profiles': DATABASE['profiles']})
+
+
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    return jsonify({
+        'total_profiles': len(DATABASE['profiles']),
+        'encrypted_profiles': len(DATABASE['encrypted_profiles']),
+        'total_matches': len(DATABASE['match_results']),
+        'last_update': datetime.now().isoformat(),
+    })
+
+
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    seen = session.get('seen_notification_ids', [])
+    out = []
+    for n in DATABASE['notifications']:
+        c = dict(n)
+        c['seen'] = n['id'] in seen
+        out.append(c)
+    unread = sum(1 for n in out if not n['seen'])
+    return jsonify({'success': True, 'notifications': out, 'unread_count': unread})
+
+
+@app.route('/api/notifications/mark-seen', methods=['POST'])
+def mark_notifications_seen():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'}), 401
+    session['seen_notification_ids'] = [n['id'] for n in DATABASE['notifications']]
+    session.modified = True
+    return jsonify({'success': True})
 
 
 @app.route('/api/database-stats', methods=['GET'])
@@ -878,7 +776,7 @@ def database_stats():
         'database_file_path': DATABASE_FILE,
         'database_file_exists': os.path.exists(DATABASE_FILE),
         'database_file_size_kb': os.path.getsize(DATABASE_FILE) / 1024 if os.path.exists(DATABASE_FILE) else 0,
-        'last_update': datetime.now().isoformat()
+        'last_update': datetime.now().isoformat(),
     }), 200
 
 
@@ -886,39 +784,25 @@ def database_stats():
 def import_database():
     if 'user_id' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'}), 401
-
     try:
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file provided'}), 400
-
-        file = request.files['file']
-        data = json.load(file)
-
-        raw_profiles = data.get('profiles')
-        if not isinstance(raw_profiles, list):
-            return jsonify({'success': False, 'error': 'Invalid database format: profiles list missing'}), 400
-
-        valid_profiles = []
-        invalid_count = 0
-
-        for p in raw_profiles:
+        data = json.load(request.files['file'])
+        raw = data.get('profiles')
+        if not isinstance(raw, list):
+            return jsonify({'success': False, 'error': 'Invalid database format'}), 400
+        valid, invalid = [], 0
+        for p in raw:
             try:
-                valid_profiles.append(normalize_profile(p, require_all_loci=False))
+                valid.append(normalize_profile(p, require_all_loci=False))
             except Exception:
-                invalid_count += 1
-
-        DATABASE['profiles'] = valid_profiles
+                invalid += 1
+        DATABASE['profiles'] = valid
         rebuild_encrypted_profiles()
         save_database_to_file()
-
-        add_notification('📥 DATABASE IMPORTED', f"Imported {len(valid_profiles)} profiles ({invalid_count} skipped)")
-
-        return jsonify({
-            'success': True,
-            'message': f"Imported {len(valid_profiles)} profiles",
-            'total_profiles': len(valid_profiles),
-            'invalid_profiles_skipped': invalid_count
-        }), 200
+        add_notification('📥 DATABASE IMPORTED', f"Imported {len(valid)} profiles ({invalid} skipped)")
+        return jsonify({'success': True, 'message': f"Imported {len(valid)} profiles",
+                        'total_profiles': len(valid), 'invalid_profiles_skipped': invalid}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -927,46 +811,36 @@ def import_database():
 def export_database():
     if 'user_id' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'}), 401
-
     try:
-        data = {
-            'version': '2.1',
-            'exported_at': datetime.now().isoformat(),
-            'total_profiles': len(DATABASE['profiles']),
-            'profiles': DATABASE['profiles']
-        }
-
+        data = {'version': '2.1', 'exported_at': datetime.now().isoformat(),
+                'total_profiles': len(DATABASE['profiles']), 'profiles': DATABASE['profiles']}
         output = io.BytesIO()
         output.write(json.dumps(data, indent=2).encode())
         output.seek(0)
-
-        return send_file(
-            output,
-            mimetype='application/json',
-            as_attachment=True,
-            download_name=f'forensic_database_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
-        )
+        return send_file(output, mimetype='application/json', as_attachment=True,
+                         download_name=f'forensic_database_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+# ═══════════════════════════════════════════════
+# Main
+# ═══════════════════════════════════════════════
 
 if __name__ == '__main__':
     os.makedirs('templates', exist_ok=True)
     os.makedirs('static', exist_ok=True)
 
-    load_database_from_file()
-    rebuild_encrypted_profiles()
-
     print("=" * 80)
-    print("🧬 Privacy-Aware Forensic DNA Evidence Matching System - WITH DATABASE")
+    print("🧬 Privacy-Aware Forensic DNA Evidence Matching System")
     print("=" * 80)
-    print("✓ Server starting...")
     print(f"✓ Total Profiles in Database: {len(DATABASE['profiles'])}")
     print(f"✓ Encrypted Profiles In Memory: {len(DATABASE['encrypted_profiles'])}")
     print(f"✓ Database File: {DATABASE_FILE}")
-    print("✓ Access the application at: http://127.0.0.1:5000")
-    print("✓ You will be redirected to REGISTER page first")
-    print("✓ After registration, LOGIN page will appear")
+    print("✓ NEW: Locus-by-locus comparison enabled")
+    print("✓ NEW: Kinship / familial matching enabled")
+    print("✓ NEW: Random Match Probability (RMP) enabled")
+    print("✓ Access: http://127.0.0.1:5000")
     print("=" * 80)
 
     debug_mode = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'

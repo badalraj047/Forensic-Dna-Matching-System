@@ -1292,16 +1292,36 @@
                         const scoreClass  = r.status === 'DEFINITE MATCH' ? 'definite' : r.status === 'PROBABLE MATCH' ? 'probable' : 'partial';
                         const borderColor = r.status === 'DEFINITE MATCH' ? '#10b981' : r.status === 'PROBABLE MATCH' ? '#0ea5e9' : '#f59e0b';
                         const statusColor = r.status === 'DEFINITE MATCH' ? '#10b981' : r.status === 'PROBABLE MATCH' ? '#0ea5e9' : '#f59e0b';
+                        const kinColor    = r.kinship && r.kinship.relationship !== 'Unrelated' ? '#f59e0b' : '#64748b';
+                        const kinLabel    = r.kinship ? r.kinship.relationship : 'N/A';
+                        const rmpLabel    = r.rmp ? r.rmp.formatted : 'N/A';
+
+                        // Build locus comparison mini-table
+                        let lociHtml = '';
+                        if (r.loci_details && r.loci_details.length > 0) {
+                            lociHtml = `<div style="overflow-x:auto;margin-top:12px;">
+                            <table style="width:100%;border-collapse:collapse;font-size:0.72em;font-family:'Space Mono',monospace;">
+                                <tr style="background:rgba(14,165,233,0.1);"><th style="padding:6px 8px;text-align:left;color:#0ea5e9;border-bottom:1px solid rgba(14,165,233,0.2);">Locus</th><th style="padding:6px 8px;text-align:center;color:#0ea5e9;border-bottom:1px solid rgba(14,165,233,0.2);">Query</th><th style="padding:6px 8px;text-align:center;color:#0ea5e9;border-bottom:1px solid rgba(14,165,233,0.2);">Target</th><th style="padding:6px 8px;text-align:center;color:#0ea5e9;border-bottom:1px solid rgba(14,165,233,0.2);">Match</th></tr>`;
+                            r.loci_details.forEach(l => {
+                                const bg = l.status === 'full' ? 'rgba(16,185,129,0.08)' : l.status === 'partial' ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.08)';
+                                const ic = l.status === 'full' ? '#10b981' : l.status === 'partial' ? '#f59e0b' : '#ef4444';
+                                const sym = l.status === 'full' ? '✓✓' : l.status === 'partial' ? '✓✗' : '✗✗';
+                                lociHtml += `<tr style="background:${bg};border-bottom:1px solid rgba(14,165,233,0.06);">
+                                    <td style="padding:5px 8px;font-weight:600;">${l.locus}</td>
+                                    <td style="padding:5px 8px;text-align:center;">[${l.alleles1.join(', ')}]</td>
+                                    <td style="padding:5px 8px;text-align:center;">[${l.alleles2.join(', ')}]</td>
+                                    <td style="padding:5px 8px;text-align:center;color:${ic};font-weight:700;">${sym}</td>
+                                </tr>`;
+                            });
+                            lociHtml += '</table></div>';
+                        }
 
                         html += `
-                        <div class="result-card" style="border-left-color:${borderColor};animation-delay:${i*0.08}s;">
+                        <div class="result-card" style="border-left-color:${borderColor};animation-delay:${i*0.08}s;cursor:pointer;" onclick="this.querySelector('.rc-expand').style.display=this.querySelector('.rc-expand').style.display==='none'?'block':'none'">
                             <div class="rc-header" style="padding:18px 22px;">
-                                <!-- Avatar -->
                                 <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1e3a8a,#0ea5e9);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1em;color:white;flex-shrink:0;">
                                     ${(r.name || r.target_id)[0].toUpperCase()}
                                 </div>
-
-                                <!-- Name + ID -->
                                 <div class="rc-name-block" style="flex:1;margin-left:14px;">
                                     <div class="rc-name" style="font-size:1.05em;">
                                         <i class="fas fa-user-circle" style="color:#0ea5e9;margin-right:7px;"></i>${r.name || 'Unknown'}
@@ -1313,25 +1333,52 @@
                                         <i class="fas fa-circle" style="font-size:0.6em;margin-right:5px;"></i>${r.status}
                                     </div>
                                 </div>
-
-                                <!-- Score badge -->
                                 <div class="rc-score-wrap">
                                     <div class="rc-score ${scoreClass}" style="font-size:1.05em;padding:8px 18px;">
                                         ${(r.score * 100).toFixed(2)}%
                                     </div>
                                 </div>
                             </div>
+                            <!-- Forensic analysis chips -->
+                            <div style="display:flex;gap:8px;padding:0 22px 14px;flex-wrap:wrap;">
+                                <span style="font-size:0.72em;padding:3px 10px;border-radius:12px;background:rgba(14,165,233,0.1);border:1px solid rgba(14,165,233,0.3);color:#0ea5e9;font-weight:600;">
+                                    <i class="fas fa-calculator" style="margin-right:4px;"></i>RMP: ${rmpLabel}
+                                </span>
+                                <span style="font-size:0.72em;padding:3px 10px;border-radius:12px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:${kinColor};font-weight:600;">
+                                    <i class="fas fa-users" style="margin-right:4px;"></i>Kinship: ${kinLabel}
+                                </span>
+                                <span style="font-size:0.72em;padding:3px 10px;border-radius:12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;font-weight:600;">
+                                    <i class="fas fa-dna" style="margin-right:4px;"></i>${r.loci_compared || 20} loci compared
+                                </span>
+                                <span style="font-size:0.68em;color:#64748b;display:flex;align-items:center;margin-left:auto;">
+                                    <i class="fas fa-chevron-down" style="margin-right:4px;"></i>Click to expand locus table
+                                </span>
+                            </div>
+                            <!-- Expandable locus-by-locus table -->
+                            <div class="rc-expand" style="display:none;padding:0 22px 18px;">
+                                <div style="padding:14px 16px;background:rgba(14,165,233,0.04);border:1px solid rgba(14,165,233,0.15);border-radius:10px;">
+                                    <div style="font-size:0.82em;font-weight:700;color:#0ea5e9;margin-bottom:8px;"><i class="fas fa-table" style="margin-right:6px;"></i>Locus-by-Locus Comparison</div>
+                                    ${lociHtml}
+                                    <!-- Kinship detail -->
+                                    ${r.kinship ? `<div style="margin-top:14px;padding:10px 14px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px;">
+                                        <div style="font-size:0.78em;font-weight:700;color:#f59e0b;margin-bottom:4px;"><i class="fas fa-users" style="margin-right:5px;"></i>Kinship Analysis</div>
+                                        <div style="font-size:0.75em;color:#cbd5e1;">Relationship: <strong style="color:${kinColor}">${kinLabel}</strong> &nbsp;|&nbsp; IBS Mean: <strong>${r.kinship.ibs_mean}</strong> &nbsp;|&nbsp; Obligate Share: <strong>${(r.kinship.obligate_share * 100).toFixed(1)}%</strong> &nbsp;|&nbsp; Confidence: <strong>${r.kinship.confidence}</strong></div>
+                                    </div>` : ''}
+                                    <!-- RMP detail -->
+                                    ${r.rmp ? `<div style="margin-top:10px;padding:10px 14px;background:rgba(14,165,233,0.06);border:1px solid rgba(14,165,233,0.2);border-radius:8px;">
+                                        <div style="font-size:0.78em;font-weight:700;color:#0ea5e9;margin-bottom:4px;"><i class="fas fa-calculator" style="margin-right:5px;"></i>Random Match Probability</div>
+                                        <div style="font-size:0.75em;color:#cbd5e1;">Probability: <strong style="color:#10b981">${rmpLabel}</strong> &nbsp;|&nbsp; Log10: <strong>${r.rmp.log10}</strong> &nbsp;|&nbsp; Loci used: <strong>${r.rmp.loci_counted}</strong></div>
+                                    </div>` : ''}
+                                </div>
+                            </div>
                         </div>`;
                     });
 
-                    // Bottom "View Full Reports" button
                     html += `
                     <div style="text-align:center;margin-top:24px;">
                         <a href="/results#latest" style="display:inline-flex;align-items:center;gap:10px;padding:14px 36px;background:linear-gradient(135deg,#1e3a8a,#0ea5e9,#06b6d4);color:white;text-decoration:none;border-radius:12px;font-weight:700;font-size:1em;box-shadow:0 10px 30px rgba(14,165,233,0.35);transition:all 0.25s ease-out;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 18px 40px rgba(14,165,233,0.55)'" onmouseout="this.style.transform='';this.style.boxShadow='0 10px 30px rgba(14,165,233,0.35)'">
-                            <i class="fas fa-file-alt"></i> View Full Reports
-                            <i class="fas fa-arrow-right"></i>
+                            <i class="fas fa-file-alt"></i> View Full Reports <i class="fas fa-arrow-right"></i>
                         </a>
-                        <p style="margin-top:10px;font-size:0.82em;color:#64748b;">Address, city, country, quality score aur sabhi details wahan milenge</p>
                     </div>`;
 
                     content.innerHTML = html;
